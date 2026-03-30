@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# build artifacts (keep only embed.js)
+public/index.global.js
+public/embed.global.js
+
+# env
+.env*
+
+# misc
+.DS_Store
+*.tsbuildinfo
