@@ -418,21 +418,20 @@ export default function BlockEditor() {
 
   if (!block) {
     return (
-      <aside className="w-72 bg-white border-l border-gray-200 flex items-center justify-center h-full">
+      <div className="bg-white flex items-center justify-center h-full w-full">
         <p className="text-sm text-gray-400 text-center px-4">
           ブロックを選択すると<br />設定フォームが表示されます
         </p>
-      </aside>
+      </div>
     )
   }
 
   return (
-    <aside className="w-72 bg-white border-l border-gray-200 flex flex-col h-full overflow-y-auto">
-      <div className="px-4 py-3 border-b border-gray-200">
-        <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">ブロック設定</h2>
-        <p className="text-xs text-gray-400 font-mono mt-0.5 truncate">{block.id}</p>
+    <div className="bg-white flex flex-col h-full w-full">
+      <div className="px-3 py-2 border-b border-gray-100">
+        <p className="text-xs text-gray-400 font-mono truncate">{block.id}</p>
       </div>
-      <div className="p-4">
+      <div className="p-3 flex-1 overflow-y-auto">
         {block.type === 'speech' && <SpeechEditor block={block} />}
         {block.type === 'spotlight' && <SpotlightEditor block={block} />}
         {block.type === 'input-spotlight' && <InputSpotlightEditor block={block} />}
@@ -440,6 +439,6 @@ export default function BlockEditor() {
         {block.type === 'validation' && <ValidationEditor block={block} />}
         {block.type === 'branch' && <BranchEditor block={block} />}
       </div>
-    </aside>
+    </div>
   )
 }

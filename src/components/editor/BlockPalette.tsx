@@ -79,10 +79,7 @@ export default function BlockPalette() {
   const addBlock = useEditorStore((s) => s.addBlock)
 
   return (
-    <aside className="w-60 bg-white border-r border-gray-200 flex flex-col h-full overflow-y-auto">
-      <div className="px-4 py-3 border-b border-gray-200">
-        <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">ブロック</h2>
-      </div>
+    <aside className="bg-white flex flex-col h-full">
       <div className="p-3 flex flex-col gap-2">
         {PALETTE_ITEMS.map((item) => (
           <button
