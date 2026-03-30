@@ -11,6 +11,27 @@ import {
   BranchBlock,
 } from '@/types/scenario'
 
+const TYPE_EMOJI: Record<Block['type'], string> = {
+  speech: '💬',
+  spotlight: '🔦',
+  'input-spotlight': '✏️',
+  'document-preview': '📄',
+  validation: '✅',
+  branch: '🔀',
+}
+
+function blockLabel(b: Block): string {
+  const emoji = TYPE_EMOJI[b.type]
+  switch (b.type) {
+    case 'speech': return `${emoji} ${b.message.slice(0, 20)}`
+    case 'spotlight': return `${emoji} ${b.targetLabel}`
+    case 'input-spotlight': return `${emoji} ${b.targetLabel}`
+    case 'document-preview': return `${emoji} ${b.targetLabel}`
+    case 'validation': return `${emoji} ${b.targetLabel}`
+    case 'branch': return `${emoji} ${b.question.slice(0, 20)}`
+  }
+}
+
 function nextOptions(blocks: Block[], currentId: string) {
   return blocks.filter((b) => b.id !== currentId)
 }
@@ -37,7 +58,7 @@ function NextSelect({
         <option value="">（終了）</option>
         {nextOptions(blocks, currentId).map((b) => (
           <option key={b.id} value={b.id}>
-            {b.id}
+            {blockLabel(b)}
           </option>
         ))}
       </select>
@@ -205,14 +226,14 @@ function BranchEditor({ block }: { block: BranchBlock }) {
         <label className="label">はい → 次のブロック</label>
         <select className="input" value={block.yesNextId ?? ''} onChange={(e) => updateBlock({ ...block, yesNextId: e.target.value || null })}>
           <option value="">（終了）</option>
-          {nextOptions(blocks, block.id).map((b) => <option key={b.id} value={b.id}>{b.id}</option>)}
+          {nextOptions(blocks, block.id).map((b) => <option key={b.id} value={b.id}>{blockLabel(b)}</option>)}
         </select>
       </div>
       <div>
         <label className="label">いいえ → 次のブロック</label>
         <select className="input" value={block.noNextId ?? ''} onChange={(e) => updateBlock({ ...block, noNextId: e.target.value || null })}>
           <option value="">（終了）</option>
-          {nextOptions(blocks, block.id).map((b) => <option key={b.id} value={b.id}>{b.id}</option>)}
+          {nextOptions(blocks, block.id).map((b) => <option key={b.id} value={b.id}>{blockLabel(b)}</option>)}
         </select>
       </div>
     </div>

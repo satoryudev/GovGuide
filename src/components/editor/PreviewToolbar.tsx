@@ -1,7 +1,20 @@
 'use client'
 
 import { useEditorStore } from '@/store/editorStore'
-import { Scenario } from '@/types/scenario'
+import { Block, Scenario } from '@/types/scenario'
+
+const TYPE_EMOJI: Record<Block['type'], string> = {
+  speech: '💬', spotlight: '🔦', 'input-spotlight': '✏️',
+  'document-preview': '📄', validation: '✅', branch: '🔀',
+}
+function blockLabel(b: Block): string {
+  const e = TYPE_EMOJI[b.type]
+  switch (b.type) {
+    case 'speech': return `${e} ${b.message.slice(0, 20)}`
+    case 'branch': return `${e} ${b.question.slice(0, 20)}`
+    default: return `${e} ${(b as { targetLabel: string }).targetLabel}`
+  }
+}
 
 interface Props {
   isPlaying: boolean
@@ -39,7 +52,7 @@ export default function PreviewToolbar({ isPlaying, onPlay, onStop }: Props) {
             <option value="">（未設定）</option>
             {scenario?.blocks.map((b) => (
               <option key={b.id} value={b.id}>
-                {b.id}
+                {blockLabel(b)}
               </option>
             ))}
           </select>

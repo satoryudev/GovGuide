@@ -57,7 +57,7 @@ const PALETTE_ITEMS: PaletteItem[] = [
 ]
 
 function createBlock(type: BlockType): Block {
-  const id = `block-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const id = `block-${Math.random().toString(36).slice(2, 7)}`
   const now = new Date().toISOString()
   switch (type) {
     case 'speech':
