@@ -18,6 +18,8 @@ import { Scenario } from '@/types/scenario'
 
 const PANEL_MIN = 160
 const COLLAPSED_W = 32
+const CANVAS_MIN = 200  // canvas の min-w-[200px] と一致
+const DIVIDERS_W = 12   // 3本 × 4px
 
 interface PanelWidths { palette: number; canvas: number; preview: number; blockEditor: number }
 interface Collapsed { palette: boolean; preview: boolean; blockEditor: boolean }
@@ -107,6 +109,11 @@ export default function EditorPage() {
   const previewStartRef = useRef(widths.preview)
   const blockEditorStartRef = useRef(widths.blockEditor)
 
+  // コンテナ幅とパネル幅の最新値を常に参照できるよう ref で保持（上限制約計算に使用）
+  const containerRef = useRef<HTMLDivElement>(null)
+  const paletteWRef = useRef(0)
+  const blockEditorWRef = useRef(0)
+
   const toggleCollapse = (panel: keyof Collapsed) => {
     // 展開するとき、隣のパネルのstartRefを更新
     setCollapsed((c) => ({ ...c, [panel]: !c[panel] }))
@@ -182,6 +189,10 @@ export default function EditorPage() {
   const previewW = collapsed.preview ? COLLAPSED_W : widths.preview
   const blockEditorW = collapsed.blockEditor ? COLLAPSED_W : widths.blockEditor
 
+  // レンダーのたびに最新値を ref に反映（リサイズ上限計算で使用）
+  paletteWRef.current = paletteW
+  blockEditorWRef.current = blockEditorW
+
   const stepperSteps = [
     { label: 'ブロックを追加', completed: (scenario?.blocks.length ?? 0) > 0 },
     { label: 'ブロックを設定', completed: scenario?.blocks.some((b) => {
@@ -240,7 +251,7 @@ export default function EditorPage() {
       </header>
 
       {/* Main 4-panel layout */}
-      <div className="flex flex-1 overflow-hidden">
+      <div ref={containerRef} className="flex flex-1 overflow-hidden">
 
         {/* ── パレット ── */}
         {collapsed.palette ? (
@@ -258,7 +269,9 @@ export default function EditorPage() {
           onDragStart={() => { paletteStartRef.current = widths.palette }}
           onResize={(delta) => {
             if (collapsed.palette) return
-            setWidths((w) => ({ ...w, palette: Math.max(PANEL_MIN, paletteStartRef.current + delta) }))
+            const containerW = containerRef.current?.clientWidth ?? 0
+            const maxPalette = containerW - blockEditorWRef.current - CANVAS_MIN - DIVIDERS_W
+            setWidths((w) => ({ ...w, palette: Math.max(PANEL_MIN, Math.min(maxPalette, paletteStartRef.current + delta)) }))
           }}
         />
 
@@ -272,7 +285,9 @@ export default function EditorPage() {
           onDragStart={() => { previewStartRef.current = widths.preview }}
           onResize={(delta) => {
             if (collapsed.preview) return
-            setWidths((w) => ({ ...w, preview: Math.max(PANEL_MIN, previewStartRef.current - delta) }))
+            const containerW = containerRef.current?.clientWidth ?? 0
+            const maxPreview = containerW - paletteWRef.current - blockEditorWRef.current - CANVAS_MIN - DIVIDERS_W
+            setWidths((w) => ({ ...w, preview: Math.max(PANEL_MIN, Math.min(maxPreview, previewStartRef.current - delta)) }))
           }}
         />
 
@@ -302,7 +317,9 @@ export default function EditorPage() {
           onDragStart={() => { blockEditorStartRef.current = widths.blockEditor }}
           onResize={(delta) => {
             if (collapsed.blockEditor) return
-            setWidths((w) => ({ ...w, blockEditor: Math.max(PANEL_MIN, blockEditorStartRef.current - delta) }))
+            const containerW = containerRef.current?.clientWidth ?? 0
+            const maxBlockEditor = containerW - paletteWRef.current - previewW - CANVAS_MIN - DIVIDERS_W
+            setWidths((w) => ({ ...w, blockEditor: Math.max(PANEL_MIN, Math.min(maxBlockEditor, blockEditorStartRef.current - delta)) }))
           }}
         />
 
