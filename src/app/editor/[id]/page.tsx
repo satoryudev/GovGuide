@@ -66,17 +66,10 @@ export default function EditorPage() {
   const [widths, setWidths] = useState<PanelWidths>({ palette: 220, canvas: 340, preview: 420, blockEditor: 260 })
   const [collapsed, setCollapsed] = useState<Collapsed>({ palette: false, preview: false, blockEditor: false })
 
-  // リサイズハンドラ（startWidth を取得してdeltaを加算）
-  const makeResizer = useCallback((panel: keyof PanelWidths, startWidthRef: React.MutableRefObject<number>) => {
-    return (delta: number) => {
-      setWidths((w) => ({ ...w, [panel]: Math.max(PANEL_MIN, startWidthRef.current + delta) }))
-    }
-  }, [])
-
-  // 各パネルのstartWidthをマウスダウン時に記録するため ref で管理
+  // mousedown 時に一度だけ記録する startWidth refs
   const paletteStartRef = useRef(widths.palette)
-  const canvasStartRef = useRef(widths.canvas)
   const previewStartRef = useRef(widths.preview)
+  const blockEditorStartRef = useRef(widths.blockEditor)
 
   const toggleCollapse = (panel: keyof Collapsed) => {
     // 展開するとき、隣のパネルのstartRefを更新
@@ -198,11 +191,13 @@ export default function EditorPage() {
           </div>
         )}
 
-        <ResizeDivider onResize={(delta) => {
-          if (collapsed.palette) return
-          paletteStartRef.current = widths.palette
-          setWidths((w) => ({ ...w, palette: Math.max(PANEL_MIN, w.palette + delta) }))
-        }} />
+        <ResizeDivider
+          onDragStart={() => { paletteStartRef.current = widths.palette }}
+          onResize={(delta) => {
+            if (collapsed.palette) return
+            setWidths((w) => ({ ...w, palette: Math.max(PANEL_MIN, paletteStartRef.current + delta) }))
+          }}
+        />
 
         {/* ── キャンバス ── */}
         <div className="flex flex-col flex-1 min-w-[200px] overflow-hidden">
@@ -210,10 +205,13 @@ export default function EditorPage() {
           <Canvas />
         </div>
 
-        <ResizeDivider onResize={(delta) => {
-          if (collapsed.preview) return
-          setWidths((w) => ({ ...w, preview: Math.max(PANEL_MIN, w.preview - delta) }))
-        }} />
+        <ResizeDivider
+          onDragStart={() => { previewStartRef.current = widths.preview }}
+          onResize={(delta) => {
+            if (collapsed.preview) return
+            setWidths((w) => ({ ...w, preview: Math.max(PANEL_MIN, previewStartRef.current - delta) }))
+          }}
+        />
 
         {/* ── プレビュー ── */}
         {collapsed.preview ? (
@@ -237,10 +235,13 @@ export default function EditorPage() {
           </div>
         )}
 
-        <ResizeDivider onResize={(delta) => {
-          if (collapsed.blockEditor) return
-          setWidths((w) => ({ ...w, blockEditor: Math.max(PANEL_MIN, w.blockEditor - delta) }))
-        }} />
+        <ResizeDivider
+          onDragStart={() => { blockEditorStartRef.current = widths.blockEditor }}
+          onResize={(delta) => {
+            if (collapsed.blockEditor) return
+            setWidths((w) => ({ ...w, blockEditor: Math.max(PANEL_MIN, blockEditorStartRef.current - delta) }))
+          }}
+        />
 
         {/* ── ブロック設定 ── */}
         {collapsed.blockEditor ? (

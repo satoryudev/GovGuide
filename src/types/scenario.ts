@@ -76,6 +76,8 @@ export interface Scenario {
   startBlockId: string | null
   /** 機能4: プログレスバー用の総ステップ数。省略時はブロック数から自動算出 */
   totalSteps?: number
+  /** プレビューで読み込む対象HTMLのURL。省略時は /demo.html */
+  previewUrl?: string
   createdAt: string
   updatedAt: string
 }
