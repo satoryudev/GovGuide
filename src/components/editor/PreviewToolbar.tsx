@@ -16,13 +16,7 @@ function blockLabel(b: Block): string {
   }
 }
 
-interface Props {
-  isPlaying: boolean
-  onPlay: () => void
-  onStop: () => void
-}
-
-export default function PreviewToolbar({ isPlaying, onPlay, onStop }: Props) {
+export default function PreviewToolbar() {
   const { scenario, updateScenarioMeta } = useEditorStore()
 
   const handleExport = () => {
@@ -62,18 +56,6 @@ export default function PreviewToolbar({ isPlaying, onPlay, onStop }: Props) {
           />
         </div>
 
-        <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
-          <button
-            onClick={onPlay} disabled={isPlaying}
-            className="text-xs px-3 py-1.5 rounded font-semibold bg-green-500 text-white
-              hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >▶ 実行</button>
-          <button
-            onClick={onStop} disabled={!isPlaying}
-            className="text-xs px-3 py-1.5 rounded font-semibold bg-gray-400 text-white
-              hover:bg-gray-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >■ 停止</button>
-        </div>
       </div>
 
       {/* 行2: 対象HTML / JSON書き出し */}

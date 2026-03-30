@@ -201,7 +201,7 @@ export default function EditorPage() {
 
         {/* ── キャンバス ── */}
         <div className="flex flex-col flex-1 min-w-[200px] overflow-hidden">
-          <PreviewToolbar isPlaying={isPlaying} onPlay={handlePlay} onStop={handleStop} />
+          <PreviewToolbar />
           <Canvas />
         </div>
 
@@ -230,7 +230,7 @@ export default function EditorPage() {
               </div>
             )}
             <div className="flex-1 overflow-hidden">
-              <PreviewPane ref={iframeRef} isPlaying={isPlaying} previewUrl={scenario.previewUrl} />
+              <PreviewPane ref={iframeRef} isPlaying={isPlaying} previewUrl={scenario.previewUrl} onPlay={handlePlay} onStop={handleStop} />
             </div>
           </div>
         )}
