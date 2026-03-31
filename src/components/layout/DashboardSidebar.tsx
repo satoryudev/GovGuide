@@ -1,14 +1,14 @@
 'use client'
 
-import { useOnboarding } from '@/hooks/useOnboarding'
-
 const NAV_ITEMS = [
   { icon: '▤', label: 'ダッシュボード', active: true },
 ]
 
-export default function DashboardSidebar() {
-  const { resetOnboarding } = useOnboarding()
+function openOnboarding() {
+  document.dispatchEvent(new CustomEvent('govguide:open-onboarding'))
+}
 
+export default function DashboardSidebar() {
   return (
     <nav className="w-60 flex-shrink-0 bg-slate-900 flex flex-col h-full overflow-hidden">
       {/* Logo */}
@@ -35,10 +35,19 @@ export default function DashboardSidebar() {
             {item.label}
           </div>
         ))}
+
+        <button
+          onClick={openOnboarding}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+            text-slate-400 hover:bg-slate-800 hover:text-slate-100 transition-colors"
+        >
+          <span className="text-base w-5 text-center">🎓</span>
+          はじめかたを見る
+        </button>
       </div>
 
       {/* Bottom section */}
-      <div className="px-4 py-4 border-t border-slate-700/50 space-y-2">
+      <div className="px-4 py-4 border-t border-slate-700/50">
         <div className="flex items-center gap-2.5 px-1">
           <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
             G
@@ -48,12 +57,6 @@ export default function DashboardSidebar() {
             <p className="text-xs text-slate-500 truncate">シナリオ作成担当</p>
           </div>
         </div>
-        <button
-          onClick={resetOnboarding}
-          className="text-xs text-slate-600 hover:text-slate-400 transition-colors w-full text-left px-1"
-        >
-          オンボーディングをリセット
-        </button>
       </div>
     </nav>
   )

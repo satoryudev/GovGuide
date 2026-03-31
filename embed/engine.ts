@@ -16,7 +16,7 @@ export class ScenarioEngine {
     this.scenario = scenario
     this.currentBlockId = null
     this.currentStep = 0
-    this.totalSteps = scenario.totalSteps ?? scenario.blocks.length
+    this.totalSteps = scenario.totalSteps ?? scenario.blocks.filter((b) => b.type !== 'start' && b.type !== 'end').length
   }
 
   start(): void {
@@ -51,6 +51,17 @@ export class ScenarioEngine {
 
   private render(block: Block): void {
     switch (block.type) {
+      case 'start':
+        // 透過ブロック：ステップカウントせず次のブロックへ自動進行
+        this.currentStep--
+        this.next(block.nextId)
+        break
+
+      case 'end':
+        // 終了ブロック：チュートリアルを終了する
+        this.finish()
+        break
+
       case 'speech':
         showOverlay()
         showBubble(

@@ -1,3 +1,5 @@
+import { getProgressState } from './progressBar'
+
 const BUBBLE_ID = 'tq-bubble'
 
 function getMoodEmoji(mood?: 'normal' | 'happy' | 'thinking'): string {
@@ -19,6 +21,34 @@ function getCharacterSvg(mood?: 'normal' | 'happy' | 'thinking'): string {
   `
 }
 
+/** 吹き出し内に埋め込む小型プログレスバー要素を生成する */
+function createProgressBar(current: number, total: number): HTMLElement {
+  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0
+
+  const wrapper = document.createElement('div')
+  wrapper.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;'
+
+  const track = document.createElement('div')
+  track.style.cssText = `
+    flex:1;height:4px;background:#f3f4f6;border-radius:9999px;overflow:hidden;
+  `
+
+  const fill = document.createElement('div')
+  fill.style.cssText = `
+    height:100%;width:${pct}%;background:#f97316;border-radius:9999px;
+    transition:width 0.4s ease;
+  `
+
+  const label = document.createElement('span')
+  label.style.cssText = 'font-size:11px;color:#9ca3af;white-space:nowrap;flex-shrink:0;'
+  label.textContent = `${current} / ${total}`
+
+  track.appendChild(fill)
+  wrapper.appendChild(track)
+  wrapper.appendChild(label)
+  return wrapper
+}
+
 export function showBubble(
   message: string,
   onNext: () => void,
@@ -26,6 +56,8 @@ export function showBubble(
   hideNext = false
 ): void {
   removeBubble()
+
+  const { current, total } = getProgressState()
 
   const el = document.createElement('div')
   el.id = BUBBLE_ID
@@ -43,6 +75,11 @@ export function showBubble(
     box-shadow:0 4px 20px rgba(0,0,0,0.15);
     flex:1;position:relative;
   `
+
+  // プログレスバー（totalSteps が設定されている場合のみ表示）
+  if (total > 0) {
+    textEl.appendChild(createProgressBar(current, total))
+  }
 
   const msgEl = document.createElement('p')
   msgEl.style.cssText = `
@@ -107,6 +144,8 @@ export function showBranchBubble(
 ): void {
   removeBubble()
 
+  const { current, total } = getProgressState()
+
   const el = document.createElement('div')
   el.id = BUBBLE_ID
   el.style.cssText = `
@@ -123,6 +162,11 @@ export function showBranchBubble(
     box-shadow:0 4px 20px rgba(0,0,0,0.15);
     flex:1;
   `
+
+  // プログレスバー
+  if (total > 0) {
+    textEl.appendChild(createProgressBar(current, total))
+  }
 
   const msgEl = document.createElement('p')
   msgEl.style.cssText = `

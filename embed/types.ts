@@ -1,4 +1,15 @@
-export type BlockType = 'speech' | 'spotlight' | 'input-spotlight' | 'document-preview' | 'validation' | 'branch'
+export type BlockType = 'start' | 'end' | 'speech' | 'spotlight' | 'input-spotlight' | 'document-preview' | 'validation' | 'branch'
+
+export interface StartBlock {
+  id: string
+  type: 'start'
+  nextId: string | null
+}
+
+export interface EndBlock {
+  id: string
+  type: 'end'
+}
 
 export interface SpeechBlock {
   id: string
@@ -58,6 +69,8 @@ export interface BranchBlock {
 }
 
 export type Block =
+  | StartBlock
+  | EndBlock
   | SpeechBlock
   | SpotlightBlock
   | InputSpotlightBlock

@@ -2,6 +2,20 @@ import { create } from 'zustand'
 import { Block, Scenario } from '@/types/scenario'
 import { saveScenario } from '@/lib/scenarioStorage'
 
+/** キャンバス上の順序に基づき各ブロックの nextId を自動計算する */
+function autoLink(blocks: Block[]): Block[] {
+  return blocks.map((b, i) => {
+    if (b.type === 'branch' || b.type === 'end') return b
+    const next = blocks[i + 1]
+    return { ...b, nextId: next?.id ?? null }
+  })
+}
+
+/** 開始ブロックの ID を自動取得する */
+function getStartBlockId(blocks: Block[]): string | null {
+  return blocks.find((b) => b.type === 'start')?.id ?? null
+}
+
 /** ピックモード：どのブロックのどのフィールドを待っているか */
 export interface PickRequest {
   blockId: string
@@ -47,8 +61,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   addBlock: (block) => {
     const { scenario } = get()
     if (!scenario) return
-    const blocks = [...scenario.blocks, block]
-    const updated = { ...scenario, blocks, updatedAt: new Date().toISOString() }
+    const blocks = autoLink([...scenario.blocks, block])
+    const updated = { ...scenario, blocks, startBlockId: getStartBlockId(blocks), updatedAt: new Date().toISOString() }
     set({ scenario: updated })
     saveScenario(updated)
   },
@@ -56,8 +70,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   removeBlock: (id) => {
     const { scenario, selectedBlockId } = get()
     if (!scenario) return
-    const blocks = scenario.blocks.filter((b) => b.id !== id)
-    const updated = { ...scenario, blocks, updatedAt: new Date().toISOString() }
+    const blocks = autoLink(scenario.blocks.filter((b) => b.id !== id))
+    const updated = { ...scenario, blocks, startBlockId: getStartBlockId(blocks), updatedAt: new Date().toISOString() }
     set({
       scenario: updated,
       selectedBlockId: selectedBlockId === id ? null : selectedBlockId,
@@ -68,7 +82,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   reorderBlocks: (blocks) => {
     const { scenario } = get()
     if (!scenario) return
-    const updated = { ...scenario, blocks, updatedAt: new Date().toISOString() }
+    const linked = autoLink(blocks)
+    const updated = { ...scenario, blocks: linked, startBlockId: getStartBlockId(linked), updatedAt: new Date().toISOString() }
     set({ scenario: updated })
     saveScenario(updated)
   },

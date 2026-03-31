@@ -14,6 +14,20 @@ interface PaletteItem {
 
 const PALETTE_ITEMS: PaletteItem[] = [
   {
+    type: 'start',
+    label: '開始ブロック',
+    description: 'チュートリアルの開始点',
+    color: 'border-green-300 bg-green-50 hover:bg-green-100',
+    emoji: '▶',
+  },
+  {
+    type: 'end',
+    label: '終了ブロック',
+    description: 'チュートリアルの終了点',
+    color: 'border-gray-300 bg-gray-50 hover:bg-gray-100',
+    emoji: '⏹',
+  },
+  {
     type: 'speech',
     label: '吹き出し',
     description: 'キャラクターのセリフ',
@@ -59,8 +73,11 @@ const PALETTE_ITEMS: PaletteItem[] = [
 
 function createBlock(type: BlockType): Block {
   const id = `block-${Math.random().toString(36).slice(2, 7)}`
-  const now = new Date().toISOString()
   switch (type) {
+    case 'start':
+      return { id, type: 'start', nextId: null }
+    case 'end':
+      return { id, type: 'end' }
     case 'speech':
       return { id, type: 'speech', message: '新しいセリフ', characterMood: 'normal', nextId: null }
     case 'spotlight':

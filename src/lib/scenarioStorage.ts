@@ -6,9 +6,14 @@ export const DEMO_SCENARIO: Scenario = {
   id: 'demo-moving',
   title: '引越し・転居届の手続き',
   category: 'moving',
-  startBlockId: 'block-1',
+  startBlockId: 'block-start',
   totalSteps: 8,
   blocks: [
+    {
+      id: 'block-start',
+      type: 'start',
+      nextId: 'block-1',
+    },
     {
       id: 'block-1',
       type: 'speech',
@@ -78,7 +83,11 @@ export const DEMO_SCENARIO: Scenario = {
       type: 'speech',
       message: '手続き完了です！お疲れさまでした。',
       characterMood: 'happy',
-      nextId: null,
+      nextId: 'block-end',
+    },
+    {
+      id: 'block-end',
+      type: 'end',
     },
   ],
   createdAt: new Date().toISOString(),

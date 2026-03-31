@@ -15,9 +15,16 @@ export default function HomePage() {
   const { hasVisited, markVisited } = useOnboarding()
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const [wizardOpen, setWizardOpen] = useState(false)
+  const [welcomeOpen, setWelcomeOpen] = useState(false)
 
   useEffect(() => {
     setScenarios(loadScenarios())
+  }, [])
+
+  useEffect(() => {
+    const handler = () => setWelcomeOpen(true)
+    document.addEventListener('govguide:open-onboarding', handler)
+    return () => document.removeEventListener('govguide:open-onboarding', handler)
   }, [])
 
   const { completed, inProgress, pct } = getCompletionStats(scenarios)
@@ -121,11 +128,11 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Welcome modal (first visit) */}
-      {!hasVisited && (
+      {/* Welcome modal (first visit or triggered from sidebar) */}
+      {(!hasVisited || welcomeOpen) && (
         <WelcomeModal
-          onStart={() => { markVisited(); openWizard() }}
-          onSkip={markVisited}
+          onStart={() => { markVisited(); setWelcomeOpen(false); openWizard() }}
+          onSkip={() => { markVisited(); setWelcomeOpen(false) }}
         />
       )}
 
