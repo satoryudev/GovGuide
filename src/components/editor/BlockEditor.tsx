@@ -4,6 +4,8 @@ import { useRef, useState, useCallback } from 'react'
 import { useEditorStore } from '@/store/editorStore'
 import {
   Block,
+  StartBlock,
+  EndBlock,
   SpeechBlock,
   SpotlightBlock,
   InputSpotlightBlock,
@@ -67,6 +69,8 @@ function SelectorInput({
 }
 
 const TYPE_EMOJI: Record<Block['type'], string> = {
+  start: '▶',
+  end: '⏹',
   speech: '💬',
   spotlight: '🔦',
   'input-spotlight': '✏️',
@@ -78,6 +82,8 @@ const TYPE_EMOJI: Record<Block['type'], string> = {
 function blockLabel(b: Block): string {
   const emoji = TYPE_EMOJI[b.type]
   switch (b.type) {
+    case 'start': return `${emoji} 開始ブロック`
+    case 'end': return `${emoji} 終了ブロック`
     case 'speech': return `${emoji} ${b.message.slice(0, 20)}`
     case 'spotlight': return `${emoji} ${b.targetLabel}`
     case 'input-spotlight': return `${emoji} ${b.targetLabel}`
@@ -88,42 +94,36 @@ function blockLabel(b: Block): string {
 }
 
 function nextOptions(blocks: Block[], currentId: string) {
-  return blocks.filter((b) => b.id !== currentId)
+  return blocks.filter((b) => b.id !== currentId && b.type !== 'start')
 }
 
-function NextSelect({
-  value,
-  onChange,
-  blocks,
-  currentId,
-}: {
-  value: string | null
-  onChange: (v: string | null) => void
-  blocks: Block[]
-  currentId: string
-}) {
+function StartBlockEditor(_: { block: StartBlock }) {
   return (
-    <div>
-      <label className="label">次のブロック</label>
-      <select
-        className="input"
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value || null)}
-      >
-        <option value="">（終了）</option>
-        {nextOptions(blocks, currentId).map((b) => (
-          <option key={b.id} value={b.id}>
-            {blockLabel(b)}
-          </option>
-        ))}
-      </select>
+    <div className="space-y-3">
+      <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-center">
+        <div className="text-2xl mb-2">▶</div>
+        <p className="text-sm font-semibold text-green-800">開始ブロック</p>
+        <p className="text-xs text-green-600 mt-1">チュートリアルはここから始まります</p>
+      </div>
+      <p className="text-xs text-gray-400 text-center">次のブロックへの接続はキャンバスの順序で自動的に設定されます</p>
+    </div>
+  )
+}
+
+function EndBlockEditor(_: { block: EndBlock }) {
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 text-center">
+        <div className="text-2xl mb-2">⏹</div>
+        <p className="text-sm font-semibold text-gray-700">終了ブロック</p>
+        <p className="text-xs text-gray-500 mt-1">チュートリアルはここで終了します</p>
+      </div>
     </div>
   )
 }
 
 function SpeechEditor({ block }: { block: SpeechBlock }) {
-  const { updateBlock, scenario } = useEditorStore()
-  const blocks = scenario?.blocks ?? []
+  const { updateBlock } = useEditorStore()
   return (
     <div className="space-y-3">
       <div>
@@ -148,14 +148,12 @@ function SpeechEditor({ block }: { block: SpeechBlock }) {
           <option value="thinking">考え中 🤔</option>
         </select>
       </div>
-      <NextSelect value={block.nextId} onChange={(v) => updateBlock({ ...block, nextId: v })} blocks={blocks} currentId={block.id} />
     </div>
   )
 }
 
 function SpotlightEditor({ block }: { block: SpotlightBlock }) {
-  const { updateBlock, scenario } = useEditorStore()
-  const blocks = scenario?.blocks ?? []
+  const { updateBlock } = useEditorStore()
   return (
     <div className="space-y-3">
       <div>
@@ -175,14 +173,12 @@ function SpotlightEditor({ block }: { block: SpotlightBlock }) {
         <label className="label">ラベル名</label>
         <input className="input" value={block.targetLabel} onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })} />
       </div>
-      <NextSelect value={block.nextId} onChange={(v) => updateBlock({ ...block, nextId: v })} blocks={blocks} currentId={block.id} />
     </div>
   )
 }
 
 function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
-  const { updateBlock, scenario } = useEditorStore()
-  const blocks = scenario?.blocks ?? []
+  const { updateBlock } = useEditorStore()
   return (
     <div className="space-y-3">
       <div>
@@ -202,14 +198,12 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
         <label className="label">ラベル名</label>
         <input className="input" value={block.targetLabel} onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })} />
       </div>
-      <NextSelect value={block.nextId} onChange={(v) => updateBlock({ ...block, nextId: v })} blocks={blocks} currentId={block.id} />
     </div>
   )
 }
 
 function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
-  const { updateBlock, scenario } = useEditorStore()
-  const blocks = scenario?.blocks ?? []
+  const { updateBlock } = useEditorStore()
 
   const [customTypes, setCustomTypes] = useState<CustomDocType[]>(() => loadCustomDocTypes())
   const [uploading, setUploading] = useState(false)
@@ -345,14 +339,12 @@ function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
         <label className="label">ボタン文言</label>
         <input className="input" value={block.buttonLabel ?? ''} onChange={(e) => updateBlock({ ...block, buttonLabel: e.target.value })} placeholder="見本を確認" />
       </div>
-      <NextSelect value={block.nextId} onChange={(v) => updateBlock({ ...block, nextId: v })} blocks={blocks} currentId={block.id} />
     </div>
   )
 }
 
 function ValidationEditor({ block }: { block: ValidationBlock }) {
-  const { updateBlock, scenario } = useEditorStore()
-  const blocks = scenario?.blocks ?? []
+  const { updateBlock } = useEditorStore()
   return (
     <div className="space-y-3">
       <div>
@@ -380,7 +372,6 @@ function ValidationEditor({ block }: { block: ValidationBlock }) {
         <label className="label">エラーメッセージ</label>
         <input className="input" value={block.errorMessage} onChange={(e) => updateBlock({ ...block, errorMessage: e.target.value })} />
       </div>
-      <NextSelect value={block.nextId} onChange={(v) => updateBlock({ ...block, nextId: v })} blocks={blocks} currentId={block.id} />
     </div>
   )
 }
@@ -432,6 +423,8 @@ export default function BlockEditor() {
         <p className="text-xs text-gray-400 font-mono truncate">{block.id}</p>
       </div>
       <div className="p-3 flex-1 overflow-y-auto">
+        {block.type === 'start' && <StartBlockEditor block={block} />}
+        {block.type === 'end' && <EndBlockEditor block={block} />}
         {block.type === 'speech' && <SpeechEditor block={block} />}
         {block.type === 'spotlight' && <SpotlightEditor block={block} />}
         {block.type === 'input-spotlight' && <InputSpotlightEditor block={block} />}

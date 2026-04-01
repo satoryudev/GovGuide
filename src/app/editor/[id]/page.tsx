@@ -92,10 +92,13 @@ function CollapsedTab({ title, onExpand }: { title: string; onExpand: () => void
 export default function EditorPage() {
   const params = useParams()
   const id = params.id as string
-  const { scenario, setScenario, updateScenarioMeta, pickRequest, applyPick, cancelPick } = useEditorStore()
+  const { scenario, setScenario, updateScenarioMeta, pickRequest, applyPick, cancelPick, selectedBlockId } = useEditorStore()
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const localBlobRef = useRef<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [titleEditing, setTitleEditing] = useState(false)
+  const [localBlobUrl, setLocalBlobUrl] = useState<string | null>(null)
+  const [localFileName, setLocalFileName] = useState<string | null>(null)
   const { tourCompleted, completeTour } = useOnboarding()
   const [tourActive, setTourActive] = useState(false)
   const [previewPlayed, setPreviewPlayed] = useState(false)
@@ -130,6 +133,13 @@ export default function EditorPage() {
     return () => clearTimeout(t)
   }, [tourCompleted])
 
+  // ⋮ ボタンでブロックが選択されたらブロック設定パネルを展開する
+  useEffect(() => {
+    if (selectedBlockId) {
+      setCollapsed((c) => ({ ...c, blockEditor: false }))
+    }
+  }, [selectedBlockId])
+
   useEffect(() => {
     if (!pickRequest) return
     iframeRef.current?.contentWindow?.postMessage({ type: 'TETSUZUKI_QUEST_PICK_START' }, '*')
@@ -161,7 +171,23 @@ export default function EditorPage() {
     return <div className="flex items-center justify-center h-screen text-gray-400">シナリオが見つかりません。</div>
   }
 
+  const handleLocalFileSelect = async (file: File) => {
+    const html = await file.text()
+    const embedJs = await fetch('/embed.js').then((r) => r.text())
+    const injection = `\n<script>\n${embedJs}\n<\/script>`
+    const modified = /<\/body>/i.test(html)
+      ? html.replace(/<\/body>/i, `${injection}\n</body>`)
+      : html + injection
+    if (localBlobRef.current) URL.revokeObjectURL(localBlobRef.current)
+    const blob = new Blob([modified], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    localBlobRef.current = url
+    setLocalBlobUrl(url)
+    setLocalFileName(file.name)
+  }
+
   const getPreviewSrc = () => {
+    if (localBlobUrl) return localBlobUrl
     const base = scenario?.previewUrl?.trim() || '/demo.html'
     return base.includes('?') ? `${base}&preview=1` : `${base}?preview=1`
   }
@@ -296,9 +322,8 @@ export default function EditorPage() {
           <CollapsedTab title="プレビュー" onExpand={() => toggleCollapse('preview')} />
         ) : (
           <div className="flex flex-col overflow-hidden flex-shrink-0 relative" style={{ width: previewW }}>
-            <PanelHeader title="プレビュー" collapsed={false} onToggle={() => toggleCollapse('preview')} />
             {pickRequest && (
-              <div className="absolute inset-x-0 top-8 z-10 flex items-center justify-between
+              <div className="absolute inset-x-0 top-[33px] z-10 flex items-center justify-between
                 bg-amber-400 text-amber-900 text-xs font-semibold px-3 py-1.5">
                 <span>🎯 要素をクリックして選択 — ESC でキャンセル</span>
                 <button onClick={() => {
@@ -307,9 +332,17 @@ export default function EditorPage() {
                 }} className="underline">キャンセル</button>
               </div>
             )}
-            <div className="flex-1 overflow-hidden">
-              <PreviewPane ref={iframeRef} isPlaying={isPlaying} previewUrl={scenario.previewUrl} onPlay={handlePlay} onStop={handleStop} />
-            </div>
+            <PreviewPane
+              ref={iframeRef}
+              isPlaying={isPlaying}
+              previewUrl={scenario.previewUrl}
+              localBlobUrl={localBlobUrl}
+              localFileName={localFileName}
+              onFileSelect={handleLocalFileSelect}
+              onCollapse={() => toggleCollapse('preview')}
+              onPlay={handlePlay}
+              onStop={handleStop}
+            />
           </div>
         )}
 
