@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Block, BlockType } from '@/types/scenario'
-import { useEditorStore } from '@/store/editorStore'
+import { useDraggable } from '@dnd-kit/core'
+import { BlockType } from '@/types/scenario'
 
 interface PaletteItem {
   type: BlockType
@@ -71,34 +71,43 @@ const PALETTE_ITEMS: PaletteItem[] = [
   },
 ]
 
-function createBlock(type: BlockType): Block {
-  const id = `block-${Math.random().toString(36).slice(2, 7)}`
-  switch (type) {
-    case 'start':
-      return { id, type: 'start', nextId: null }
-    case 'end':
-      return { id, type: 'end' }
-    case 'speech':
-      return { id, type: 'speech', message: '新しいセリフ', characterMood: 'normal', nextId: null }
-    case 'spotlight':
-      return { id, type: 'spotlight', message: '説明文', targetSelector: '#target', targetLabel: '対象要素', nextId: null }
-    case 'input-spotlight':
-      return { id, type: 'input-spotlight', message: '入力してください', targetId: 'input-id', targetLabel: '入力欄', nextId: null }
-    case 'document-preview':
-      return { id, type: 'document-preview', message: '書類を確認してください', targetId: 'input-id', targetLabel: '入力欄', documentType: 'mynumber-card', nextId: null }
-    case 'validation':
-      return { id, type: 'validation', message: '正しく入力してください', targetSelector: '#input-id', targetLabel: '入力欄', validationPattern: '^.+$', errorMessage: '入力が正しくありません', nextId: null }
-    case 'branch':
-      return { id, type: 'branch', question: 'はいですか？', yesNextId: null, noNextId: null }
-  }
+interface DraggableItemProps {
+  item: PaletteItem
+  itemRef?: React.Ref<HTMLDivElement>
+}
+
+function DraggablePaletteItem({ item, itemRef }: DraggableItemProps) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `palette-${item.type}`,
+    data: { source: 'palette', blockType: item.type },
+  })
+
+  return (
+    <div
+      ref={(el) => {
+        setNodeRef(el)
+        if (typeof itemRef === 'function') itemRef(el)
+        else if (itemRef) (itemRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+      }}
+      {...attributes}
+      {...listeners}
+      tabIndex={0}
+      className={`w-full text-left p-3 rounded-lg border cursor-grab active:cursor-grabbing transition-colors select-none ${item.color} ${isDragging ? 'opacity-40' : ''}`}
+    >
+      <div className="flex items-center gap-2 mb-0.5">
+        <span>{item.emoji}</span>
+        <span className="text-sm font-semibold text-gray-800">{item.label}</span>
+      </div>
+      <p className="text-xs text-gray-500 pl-6">{item.description}</p>
+    </div>
+  )
 }
 
 export default function BlockPalette() {
-  const addBlock = useEditorStore((s) => s.addBlock)
-  const firstButtonRef = useRef<HTMLButtonElement>(null)
+  const firstItemRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const handler = () => firstButtonRef.current?.focus()
+    const handler = () => firstItemRef.current?.focus()
     document.addEventListener('govguide:focus-palette', handler)
     return () => document.removeEventListener('govguide:focus-palette', handler)
   }, [])
@@ -107,18 +116,11 @@ export default function BlockPalette() {
     <aside id="block-palette" className="bg-white flex flex-col h-full">
       <div className="p-3 flex flex-col gap-2">
         {PALETTE_ITEMS.map((item, i) => (
-          <button
+          <DraggablePaletteItem
             key={item.type}
-            ref={i === 0 ? firstButtonRef : undefined}
-            onClick={() => addBlock(createBlock(item.type))}
-            className={`w-full text-left p-3 rounded-lg border cursor-pointer transition-colors ${item.color}`}
-          >
-            <div className="flex items-center gap-2 mb-0.5">
-              <span>{item.emoji}</span>
-              <span className="text-sm font-semibold text-gray-800">{item.label}</span>
-            </div>
-            <p className="text-xs text-gray-500 pl-6">{item.description}</p>
-          </button>
+            item={item}
+            itemRef={i === 0 ? firstItemRef : undefined}
+          />
         ))}
       </div>
     </aside>

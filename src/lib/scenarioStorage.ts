@@ -27,6 +27,7 @@ export const DEMO_SCENARIO: Scenario = {
       question: '引越し前後の住所は同じ市区町村ですか？',
       yesNextId: 'block-3a',
       noNextId: 'block-3b',
+      nextId: 'block-4',
     },
     {
       id: 'block-3a',

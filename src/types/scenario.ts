@@ -69,6 +69,8 @@ export interface BranchBlock {
   question: string
   yesNextId: string | null
   noNextId: string | null
+  /** 分岐後の合流先（どちらのパスも終わったら進むメインフローのブロック） */
+  nextId: string | null
 }
 
 export type Block =

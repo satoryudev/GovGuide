@@ -5,7 +5,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Block } from '@/types/scenario'
 import { useEditorStore } from '@/store/editorStore'
 
-const TYPE_META: Record<Block['type'], { label: string; color: string; emoji: string }> = {
+export const TYPE_META: Record<Block['type'], { label: string; color: string; emoji: string }> = {
   start: { label: '開始ブロック', color: 'border-l-green-500 bg-green-50', emoji: '▶' },
   end: { label: '終了ブロック', color: 'border-l-gray-400 bg-gray-50', emoji: '⏹' },
   speech: { label: '吹き出し', color: 'border-l-blue-400 bg-blue-50', emoji: '💬' },
@@ -16,7 +16,7 @@ const TYPE_META: Record<Block['type'], { label: string; color: string; emoji: st
   branch: { label: '条件分岐', color: 'border-l-red-400 bg-red-50', emoji: '🔀' },
 }
 
-function getBlockSummary(block: Block): string {
+export function getBlockSummary(block: Block): string {
   switch (block.type) {
     case 'start': return 'チュートリアルの開始点'
     case 'end': return 'チュートリアルの終了点'
@@ -51,24 +51,16 @@ export default function BlockItem({ block, index }: Props) {
     <div
       ref={setNodeRef}
       style={style}
+      {...attributes}
+      {...listeners}
       onClick={() => setSelectedBlockId(null)}
       className={`
-        flex items-stretch gap-2 p-3 rounded-lg border-l-4 cursor-pointer
+        flex items-stretch gap-2 p-3 rounded-lg border-l-4 cursor-grab active:cursor-grabbing
         ${meta.color}
         ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : 'hover:brightness-95'}
         transition-all
       `}
     >
-      {/* ドラッグハンドル */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="mt-0.5 text-gray-400 cursor-grab active:cursor-grabbing select-none flex-shrink-0"
-        onClick={(e) => e.stopPropagation()}
-      >
-        ⠿
-      </div>
-
       {/* メインコンテンツ */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* 上段：ラベル ＋ ⋮ 設定ボタン */}
@@ -77,6 +69,7 @@ export default function BlockItem({ block, index }: Props) {
           <span className="text-xs font-semibold text-gray-600">{meta.label}</span>
           <span className="text-xs text-gray-400 ml-auto mr-1">#{index + 1}</span>
           <button
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); setSelectedBlockId(block.id) }}
             className="text-gray-400 hover:text-gray-700 transition-colors leading-none flex-shrink-0 px-0.5"
             title="ブロック設定を開く"
@@ -92,6 +85,7 @@ export default function BlockItem({ block, index }: Props) {
         <div className="flex items-center mt-0.5">
           <p className="text-xs text-gray-400 font-mono truncate flex-1">{block.id}</p>
           <button
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); removeBlock(block.id) }}
             className="text-gray-300 hover:text-red-500 transition-colors text-base leading-none flex-shrink-0 ml-1"
             title="削除"
