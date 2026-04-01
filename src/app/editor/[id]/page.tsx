@@ -11,6 +11,9 @@ import BlockEditor from '@/components/editor/BlockEditor'
 import PreviewPane from '@/components/editor/PreviewPane'
 import PreviewToolbar from '@/components/editor/PreviewToolbar'
 import ResizeDivider from '@/components/editor/ResizeDivider'
+import EditorDndProvider from '@/components/editor/EditorDndProvider'
+import { BranchViewProvider, useBranchView } from '@/components/editor/BranchViewContext'
+import BranchCanvas from '@/components/editor/BranchCanvas'
 import { useOnboarding } from '@/hooks/useOnboarding'
 import EditorTour from '@/components/onboarding/EditorTour'
 import { getScenarioStatus, ScenarioStatus } from '@/lib/scenarioUtils'
@@ -18,7 +21,7 @@ import { Scenario } from '@/types/scenario'
 
 const PANEL_MIN = 160
 const COLLAPSED_W = 32
-const CANVAS_MIN = 200  // canvas の min-w-[200px] と一致
+const CANVAS_MIN = 320  // canvas の min-w-[320px] と一致（ツールバー3ボタンが見切れない最小幅）
 const DIVIDERS_W = 12   // 3本 × 4px
 
 interface PanelWidths { palette: number; canvas: number; preview: number; blockEditor: number }
@@ -89,6 +92,18 @@ function CollapsedTab({ title, onExpand }: { title: string; onExpand: () => void
   )
 }
 
+/** ブランチビューとメインキャンバスを切り替えるパネルコンテンツ */
+function CanvasPanelContent({ onExportCallback }: { onExportCallback: () => void }) {
+  const { branchView } = useBranchView()
+  if (branchView) return <BranchCanvas />
+  return (
+    <>
+      <PreviewToolbar onExportCallback={onExportCallback} />
+      <Canvas />
+    </>
+  )
+}
+
 export default function EditorPage() {
   const params = useParams()
   const id = params.id as string
@@ -115,6 +130,7 @@ export default function EditorPage() {
   // コンテナ幅とパネル幅の最新値を常に参照できるよう ref で保持（上限制約計算に使用）
   const containerRef = useRef<HTMLDivElement>(null)
   const paletteWRef = useRef(0)
+  const previewWRef = useRef(0)
   const blockEditorWRef = useRef(0)
 
   const toggleCollapse = (panel: keyof Collapsed) => {
@@ -217,6 +233,7 @@ export default function EditorPage() {
 
   // レンダーのたびに最新値を ref に反映（リサイズ上限計算で使用）
   paletteWRef.current = paletteW
+  previewWRef.current = previewW
   blockEditorWRef.current = blockEditorW
 
   const stepperSteps = [
@@ -277,6 +294,8 @@ export default function EditorPage() {
       </header>
 
       {/* Main 4-panel layout */}
+      <BranchViewProvider>
+      <EditorDndProvider>
       <div ref={containerRef} className="flex flex-1 overflow-hidden">
 
         {/* ── パレット ── */}
@@ -296,15 +315,14 @@ export default function EditorPage() {
           onResize={(delta) => {
             if (collapsed.palette) return
             const containerW = containerRef.current?.clientWidth ?? 0
-            const maxPalette = containerW - blockEditorWRef.current - CANVAS_MIN - DIVIDERS_W
+            const maxPalette = containerW - previewWRef.current - blockEditorWRef.current - CANVAS_MIN - DIVIDERS_W
             setWidths((w) => ({ ...w, palette: Math.max(PANEL_MIN, Math.min(maxPalette, paletteStartRef.current + delta)) }))
           }}
         />
 
         {/* ── キャンバス ── */}
-        <div className="flex flex-col flex-1 min-w-[200px] overflow-hidden">
-          <PreviewToolbar onExportCallback={() => setExported(true)} />
-          <Canvas />
+        <div className="flex flex-col flex-1 min-w-[320px] overflow-hidden">
+          <CanvasPanelContent onExportCallback={() => setExported(true)} />
         </div>
 
         <ResizeDivider
@@ -351,7 +369,7 @@ export default function EditorPage() {
           onResize={(delta) => {
             if (collapsed.blockEditor) return
             const containerW = containerRef.current?.clientWidth ?? 0
-            const maxBlockEditor = containerW - paletteWRef.current - previewW - CANVAS_MIN - DIVIDERS_W
+            const maxBlockEditor = containerW - paletteWRef.current - previewWRef.current - CANVAS_MIN - DIVIDERS_W
             setWidths((w) => ({ ...w, blockEditor: Math.max(PANEL_MIN, Math.min(maxBlockEditor, blockEditorStartRef.current - delta)) }))
           }}
         />
@@ -369,6 +387,8 @@ export default function EditorPage() {
         )}
 
       </div>
+      </EditorDndProvider>
+      </BranchViewProvider>
 
       {/* Editor tour (portal → document.body) */}
       <EditorTour
