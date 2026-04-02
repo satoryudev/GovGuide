@@ -29,14 +29,12 @@ const PALETTE_META: Record<BlockType, { label: string; emoji: string; color: str
   speech:           { label: '吹き出し',           emoji: '💬', color: 'border-blue-300 bg-blue-50' },
   spotlight:        { label: 'スポットライト',     emoji: '🔦', color: 'border-amber-300 bg-amber-50' },
   'input-spotlight':{ label: '入力スポットライト', emoji: '✏️', color: 'border-indigo-300 bg-indigo-50' },
-  'document-preview':{ label: '書類プレビュー',   emoji: '📄', color: 'border-teal-300 bg-teal-50' },
-  validation:       { label: 'バリデーション',     emoji: '✅', color: 'border-rose-300 bg-rose-50' },
   branch:           { label: '条件分岐',           emoji: '🔀', color: 'border-red-300 bg-red-50' },
 }
 
 export default function EditorDndProvider({ children }: { children: React.ReactNode }) {
   const { scenario, addBlocksAt, setBranchChild, reorderBlocks, addBlocksToBranchChain, reorderBranchChain } = useEditorStore()
-  const { branchView } = useBranchView()
+  const { currentBranchView: branchView } = useBranchView()
   const [activePaletteType, setActivePaletteType] = useState<BlockType | null>(null)
   const [overBlockId, setOverBlockId] = useState<string | null>(null)
 
@@ -73,16 +71,13 @@ export default function EditorDndProvider({ children }: { children: React.ReactN
       if (active.data.current?.source === 'palette') {
         const blockType = active.data.current.blockType as BlockType
         const overId = over.id as string
-        const newBlocks = blockType === 'branch'
-          ? [...createBranchGroup()]
-          : [createBlock(blockType)]
         const insertIdx = (overId === 'branch-canvas-end' || overId === 'branch-canvas-container')
           ? chainBlocks.length
           : (() => {
               const i = chainBlocks.findIndex((b) => b.id === overId)
               return i === -1 ? chainBlocks.length : i
             })()
-        addBlocksToBranchChain(branchView.branchId, branchView.side, newBlocks, insertIdx)
+        addBlocksToBranchChain(branchView.branchId, branchView.side, [createBlock(blockType)], insertIdx)
       } else {
         // チェーン内の並び替え
         const oldIdx = chainBlocks.findIndex((b) => b.id === active.id)

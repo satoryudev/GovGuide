@@ -11,8 +11,6 @@ export const TYPE_META: Record<Block['type'], { label: string; color: string; em
   speech: { label: '吹き出し', color: 'border-l-blue-400 bg-blue-50', emoji: '💬' },
   spotlight: { label: 'スポットライト', color: 'border-l-amber-400 bg-amber-50', emoji: '🔦' },
   'input-spotlight': { label: '入力スポットライト', color: 'border-l-indigo-400 bg-indigo-50', emoji: '✏️' },
-  'document-preview': { label: '書類プレビュー', color: 'border-l-teal-400 bg-teal-50', emoji: '📄' },
-  validation: { label: 'バリデーション', color: 'border-l-rose-400 bg-rose-50', emoji: '✅' },
   branch: { label: '条件分岐', color: 'border-l-red-400 bg-red-50', emoji: '🔀' },
 }
 
@@ -23,8 +21,6 @@ export function getBlockSummary(block: Block): string {
     case 'speech': return block.message.slice(0, 40) + (block.message.length > 40 ? '…' : '')
     case 'spotlight': return `${block.targetLabel} → ${block.message.slice(0, 30)}`
     case 'input-spotlight': return `${block.targetLabel} → ${block.message.slice(0, 30)}`
-    case 'document-preview': return `${block.targetLabel} → ${block.message.slice(0, 30)}`
-    case 'validation': return `${block.targetLabel} (${block.validationPattern})`
     case 'branch': return block.question.slice(0, 40)
   }
 }
@@ -35,9 +31,10 @@ interface Props {
 }
 
 export default function BlockItem({ block, index }: Props) {
-  const meta = TYPE_META[block.type]
-  const { selectedBlockId, setSelectedBlockId, removeBlock } = useEditorStore()
+  const meta = TYPE_META[block.type] ?? { label: block.type, color: 'border-l-gray-400 bg-gray-50', emoji: '?' }
+  const { selectedBlockId, setSelectedBlockId, removeBlock, activeBlockId } = useEditorStore()
   const isSelected = selectedBlockId === block.id
+  const isActive = activeBlockId === block.id
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id })
 
@@ -51,13 +48,14 @@ export default function BlockItem({ block, index }: Props) {
     <div
       ref={setNodeRef}
       style={style}
+      data-block-id={block.id}
       {...attributes}
       {...listeners}
       onClick={() => setSelectedBlockId(null)}
       className={`
         flex items-stretch gap-2 p-3 rounded-lg border-l-4 cursor-grab active:cursor-grabbing
         ${meta.color}
-        ${isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : 'hover:brightness-95'}
+        ${isActive ? 'ring-2 ring-amber-400 ring-offset-1 animate-pulse shadow-[0_0_12px_3px_rgba(251,191,36,0.5)]' : isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : 'hover:brightness-95'}
         transition-all
       `}
     >

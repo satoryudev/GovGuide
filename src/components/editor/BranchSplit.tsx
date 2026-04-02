@@ -7,11 +7,16 @@ interface Props {
   branch: BranchBlock
   /** true のとき、下のブロックへ向かうマージコネクターを描画する */
   hasNextBlock?: boolean
+  /** 省略時は setBranchView（スタックリセット＋push）。ネスト分岐では pushBranchView を渡す */
+  onNavigate?: (side: 'yes' | 'no') => void
+  /** true のとき、合流ヒントと共通処理枠を非表示にする */
+  hideMergeHint?: boolean
 }
 
 /** 条件分岐ブロックの下に「はい（左）/ いいえ（右）」のナビゲーションボタンを描画する */
-export default function BranchSplit({ branch, hasNextBlock = false }: Props) {
+export default function BranchSplit({ branch, hasNextBlock = false, onNavigate, hideMergeHint = false }: Props) {
   const { setBranchView } = useBranchView()
+  const navigate = onNavigate ?? ((side: 'yes' | 'no') => setBranchView({ branchId: branch.id, side }))
 
   return (
     <div className="mt-1">
@@ -27,7 +32,8 @@ export default function BranchSplit({ branch, hasNextBlock = false }: Props) {
         <div className="flex-1 flex flex-col items-center px-1">
           <div className="w-px h-3 bg-gray-300" />
           <button
-            onClick={() => setBranchView({ branchId: branch.id, side: 'yes' })}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); navigate('yes') }}
             className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200
               text-[10px] text-green-600 font-semibold hover:bg-green-100 active:bg-green-200 transition-colors select-none"
           >
@@ -39,7 +45,8 @@ export default function BranchSplit({ branch, hasNextBlock = false }: Props) {
         <div className="flex-1 flex flex-col items-center px-1">
           <div className="w-px h-3 bg-gray-300" />
           <button
-            onClick={() => setBranchView({ branchId: branch.id, side: 'no' })}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); navigate('no') }}
             className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200
               text-[10px] text-red-500 font-semibold hover:bg-red-100 active:bg-red-200 transition-colors select-none"
           >
@@ -68,7 +75,7 @@ export default function BranchSplit({ branch, hasNextBlock = false }: Props) {
           </div>
         </div>
       ) : (
-        /* 次のブロックがない場合：共通処理追加ヒント */
+        /* 次のブロックがない場合：合流コネクター（ヒントはオプション） */
         <div className="flex flex-col items-center mt-2 select-none pointer-events-none">
           <svg width="100%" height="16" className="block">
             <line x1="25%" y1="0"  x2="25%" y2="8"  stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
@@ -77,10 +84,14 @@ export default function BranchSplit({ branch, hasNextBlock = false }: Props) {
             <line x1="75%" y1="8"  x2="50%" y2="8"  stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
             <line x1="50%" y1="8"  x2="50%" y2="16" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <span className="text-[9px] text-gray-400 font-medium tracking-wide mt-0.5">合流 ↓</span>
-          <div className="mt-1 px-3 py-1 rounded border border-dashed border-gray-300 text-[9px] text-gray-400">
-            共通処理はここにブロックを追加
-          </div>
+          {!hideMergeHint && (
+            <>
+              <span className="text-[9px] text-gray-400 font-medium tracking-wide mt-0.5">合流 ↓</span>
+              <div className="mt-1 px-3 py-1 rounded border border-dashed border-gray-300 text-[9px] text-gray-400">
+                共通処理はここにブロックを追加
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

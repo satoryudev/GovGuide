@@ -32,6 +32,50 @@ export function getBranchChain(blocks: Block[], startId: string | null): Block[]
   return result
 }
 
+/**
+ * 指定した branch ブロックの yes/no チェーン（ネスト含む）に属する
+ * すべてのブロック ID を再帰的に収集する。branch 自身は含まない。
+ */
+export function collectBranchSubtreeIds(blocks: Block[], branchId: string): Set<string> {
+  const result = new Set<string>()
+  const queue: string[] = [branchId]
+  while (queue.length > 0) {
+    const id = queue.pop()!
+    const b = blocks.find((bl) => bl.id === id)
+    if (!b || b.type !== 'branch') continue
+    const branch = b as BranchBlock
+    for (const chain of [getBranchChain(blocks, branch.yesNextId), getBranchChain(blocks, branch.noNextId)]) {
+      for (const bl of chain) {
+        if (!result.has(bl.id)) {
+          result.add(bl.id)
+          if (bl.type === 'branch') queue.push(bl.id)
+        }
+      }
+    }
+  }
+  return result
+}
+
+/**
+ * blockId がどの分岐チェーンに属するかを表すスタック（外→内の順）を返す。
+ * メインチェーンのブロックなら空配列。
+ */
+export function findBranchStackForBlock(
+  blocks: Block[],
+  blockId: string,
+): Array<{ branchId: string; side: 'yes' | 'no' }> {
+  for (const block of blocks) {
+    if (block.type !== 'branch') continue
+    if (getBranchChain(blocks, block.yesNextId).some((b) => b.id === blockId)) {
+      return [...findBranchStackForBlock(blocks, block.id), { branchId: block.id, side: 'yes' as const }]
+    }
+    if (getBranchChain(blocks, block.noNextId).some((b) => b.id === blockId)) {
+      return [...findBranchStackForBlock(blocks, block.id), { branchId: block.id, side: 'no' as const }]
+    }
+  }
+  return []
+}
+
 /** すべての branch の yes/no チェーンに含まれるブロック ID を返す */
 export function getBranchChainIds(blocks: Block[]): Set<string> {
   const ids = new Set<string>()

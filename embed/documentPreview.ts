@@ -1,7 +1,5 @@
 import { DocumentPreviewBlock } from './types'
-import { showBubble, removeBubble } from './bubble'
 
-const PREVIEW_BTN_CLASS = 'tq-doc-preview-btn'
 const MODAL_ID = 'tq-doc-modal'
 
 // Simple placeholder SVG images (embedded)
@@ -92,48 +90,8 @@ function getDocumentPreviewContent(type: DocumentPreviewBlock['documentType'], c
   return placeholders[type] ?? placeholders['mynumber-card']
 }
 
-export function handleDocumentPreview(
-  block: DocumentPreviewBlock,
-  onNext: () => void
-): void {
-  const target = document.getElementById(block.targetId)
 
-  // Insert preview button after the target input
-  const existingBtn = document.querySelector(`.${PREVIEW_BTN_CLASS}`) as HTMLElement | null
-  existingBtn?.remove()
-
-  if (target) {
-    const btn = document.createElement('button')
-    btn.className = PREVIEW_BTN_CLASS
-    btn.textContent = `🔍 ${block.buttonLabel ?? '見本を確認'}`
-    btn.style.cssText = `
-      display:inline-block;margin-top:6px;margin-left:8px;
-      background:transparent;border:1.5px solid #0d9488;
-      color:#0d9488;padding:4px 12px;border-radius:6px;
-      font-size:13px;cursor:pointer;font-weight:600;
-      transition:all 0.15s;
-    `
-    btn.onmouseover = () => {
-      btn.style.background = '#0d9488'
-      btn.style.color = 'white'
-    }
-    btn.onmouseout = () => {
-      btn.style.background = 'transparent'
-      btn.style.color = '#0d9488'
-    }
-    btn.onclick = () => showModal(block)
-
-    // Insert after target
-    target.insertAdjacentElement('afterend', btn)
-  }
-
-  showBubble(block.message, () => {
-    document.querySelector(`.${PREVIEW_BTN_CLASS}`)?.remove()
-    onNext()
-  })
-}
-
-function showModal(block: DocumentPreviewBlock): void {
+export function showModal(block: DocumentPreviewBlock): void {
   document.getElementById(MODAL_ID)?.remove()
 
   const backdrop = document.createElement('div')
@@ -181,5 +139,4 @@ function showModal(block: DocumentPreviewBlock): void {
 
 export function removeDocumentPreview(): void {
   document.getElementById(MODAL_ID)?.remove()
-  document.querySelector(`.${PREVIEW_BTN_CLASS}`)?.remove()
 }

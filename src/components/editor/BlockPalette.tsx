@@ -49,20 +49,6 @@ const PALETTE_ITEMS: PaletteItem[] = [
     emoji: '✏️',
   },
   {
-    type: 'document-preview',
-    label: '書類プレビュー',
-    description: '必要書類の見本表示',
-    color: 'border-teal-300 bg-teal-50 hover:bg-teal-100',
-    emoji: '📄',
-  },
-  {
-    type: 'validation',
-    label: 'バリデーション',
-    description: '入力エラーの強調',
-    color: 'border-rose-300 bg-rose-50 hover:bg-rose-100',
-    emoji: '✅',
-  },
-  {
     type: 'branch',
     label: '条件分岐',
     description: 'はい / いいえ',

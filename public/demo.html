@@ -3,117 +3,623 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>転居届申請（デモ）</title>
+  <title>転居届 オンライン申請 - e-Gov 行政手続きポータル</title>
   <style>
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 40px 24px;
-      background: #f9fafb;
-      color: #1f2937;
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
     }
-    h1 {
+
+    /* ── ヘッダー ── */
+    .site-header {
+      background: #1a3a5c;
+      color: white;
+      padding: 0 24px;
+    }
+    .site-header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 56px;
+    }
+    .site-logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      opacity: 0.95;
+    }
+    .site-logo span {
+      display: inline-block;
+      background: #4a9eff;
+      color: white;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-right: 8px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .site-header-sub {
+      font-size: 11px;
+      opacity: 0.65;
+      margin-left: auto;
+    }
+
+    /* ── パンくずリスト ── */
+    .breadcrumb {
+      background: #e8edf2;
+      border-bottom: 1px solid #d1dbe6;
+      padding: 0 24px;
+    }
+    .breadcrumb-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      font-size: 12px;
+      color: #4a6580;
+    }
+    .breadcrumb-inner a { color: #2563eb; text-decoration: none; }
+    .breadcrumb-inner a:hover { text-decoration: underline; }
+    .breadcrumb-sep { color: #94a3b8; }
+
+    /* ── メインコンテンツ ── */
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    /* ── ページタイトルブロック ── */
+    .page-title-block {
+      background: white;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      border-left: 5px solid #1a3a5c;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .page-title-icon {
+      font-size: 36px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .page-title-text h1 {
       font-size: 22px;
       font-weight: 700;
-      color: #111827;
-      margin-bottom: 8px;
+      color: #1a3a5c;
+      margin-bottom: 6px;
     }
-    .subtitle {
+    .page-title-text p {
       font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 32px;
+      color: #64748b;
+      line-height: 1.6;
     }
+    .notice-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      color: #92400e;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 99px;
+      margin-top: 8px;
+    }
+
+    /* ── ステップ表示 ── */
+    .step-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 28px;
+      background: white;
+      border-radius: 10px;
+      padding: 16px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      position: relative;
+    }
+    .step-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: #e2e8f0;
+      z-index: 0;
+    }
+    .step-item.active:not(:last-child)::after { background: #3b82f6; }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      background: #e2e8f0;
+      color: #94a3b8;
+      position: relative;
+      z-index: 1;
+    }
+    .step-item.active .step-num {
+      background: #3b82f6;
+      color: white;
+    }
+    .step-item.done .step-num {
+      background: #22c55e;
+      color: white;
+    }
+    .step-label {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .step-item.active .step-label { color: #3b82f6; }
+    .step-item.done .step-label { color: #22c55e; }
+
+    /* ── セクション ── */
+    .section {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .section-header {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-header-icon {
+      font-size: 18px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a3a5c;
+    }
+    .section-body {
+      padding: 24px;
+    }
+
+    /* ── フォームパーツ ── */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-row.full { grid-template-columns: 1fr; }
     .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       margin-bottom: 20px;
     }
+    .form-group:last-child { margin-bottom: 0; }
     label {
-      display: block;
       font-size: 13px;
       font-weight: 600;
       color: #374151;
-      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    input[type="text"] {
+    .required {
+      background: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .optional {
+      background: #e2e8f0;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .form-hint {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    input[type="text"],
+    input[type="date"],
+    select {
       width: 100%;
       padding: 10px 14px;
       border: 1.5px solid #d1d5db;
       border-radius: 8px;
       font-size: 14px;
+      font-family: inherit;
       background: white;
+      color: #1a202c;
       transition: border-color 0.15s, box-shadow 0.15s;
       outline: none;
+      appearance: none;
     }
-    input[type="text"]:focus {
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    select:focus {
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
     }
+    .input-prefix-wrap {
+      display: flex;
+      align-items: center;
+    }
+    .input-prefix {
+      padding: 10px 12px;
+      background: #f1f5f9;
+      border: 1.5px solid #d1d5db;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      font-size: 13px;
+      color: #64748b;
+      white-space: nowrap;
+    }
+    .input-prefix + input {
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* セレクトの矢印 */
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    .select-wrap select { padding-right: 32px; }
+
+    /* ── 注意書きボックス ── */
+    .info-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #1e40af;
+      line-height: 1.7;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 8px;
+    }
+    .info-box-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+    /* ── 同意チェック ── */
+    .consent-box {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }
+    .consent-box p {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a202c;
+    }
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #3b82f6;
+      flex-shrink: 0;
+    }
+
+    /* ── 送信ボタン ── */
+    .submit-area {
+      text-align: center;
+      padding-top: 8px;
+    }
     #submit-btn {
-      margin-top: 8px;
-      background: #3b82f6;
+      background: #1a3a5c;
       color: white;
       border: none;
-      padding: 12px 32px;
+      padding: 14px 56px;
       border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 16px;
+      font-weight: 700;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(26,58,92,0.35);
+      font-family: inherit;
+      letter-spacing: 0.04em;
     }
-    #submit-btn:hover { background: #2563eb; }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    #submit-btn:hover {
+      background: #234e7a;
+      box-shadow: 0 6px 20px rgba(26,58,92,0.4);
+      transform: translateY(-1px);
     }
-    .divider {
-      border: none;
-      border-top: 1px solid #e5e7eb;
-      margin: 24px 0;
+    #submit-btn:active { transform: translateY(0); }
+    .submit-note {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 10px;
+    }
+
+    /* ── フッター ── */
+    .site-footer {
+      background: #1a3a5c;
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      padding: 20px 24px;
+      font-size: 12px;
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
-  <h1>転居届 オンライン申請</h1>
-  <p class="subtitle">引越し後14日以内に手続きを行ってください</p>
 
-  <div class="card">
-    <div class="form-group">
-      <label for="postal-code">郵便番号 <span style="color:#ef4444">*</span></label>
-      <input type="text" id="postal-code" placeholder="例: 1234567" maxlength="7">
+  <!-- ヘッダー -->
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="site-logo">
+        <span>e-Gov</span>行政手続きポータル
+      </div>
+      <div class="site-header-sub">ログイン中：山田 太郎 さん</div>
+    </div>
+  </header>
+
+  <!-- パンくずリスト -->
+  <nav class="breadcrumb">
+    <div class="breadcrumb-inner">
+      <a href="#">ホーム</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="#">引越し・転居</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>転居届 オンライン申請</span>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ページタイトル -->
+    <div class="page-title-block">
+      <div class="page-title-icon">🏠</div>
+      <div class="page-title-text">
+        <h1>転居届 オンライン申請</h1>
+        <p>住所変更の届け出をオンラインで行います。引越し後 <strong>14日以内</strong> に申請してください。<br>マイナンバーカードをお手元にご用意ください。</p>
+        <div class="notice-badge">⚠️ 申請後の取り消しはできません</div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="mynumber-input">マイナンバー <span style="color:#ef4444">*</span></label>
-      <input type="text" id="mynumber-input" placeholder="12桁の番号">
+    <!-- ステップ表示 -->
+    <div class="step-bar">
+      <div class="step-item active">
+        <div class="step-num">1</div>
+        <div class="step-label">情報入力</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-label">内容確認</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-label">本人確認</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-label">申請完了</div>
+      </div>
     </div>
 
-    <hr class="divider">
+    <!-- セクション1: 申請者情報 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-icon">👤</span>
+        <span class="section-title">申請者情報</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name-input">
+              氏名 <span class="required">必須</span>
+            </label>
+            <input type="text" id="name-input" placeholder="山田 太郎">
+            <span class="form-hint">戸籍上の氏名をご記入ください</span>
+          </div>
+          <div class="form-group">
+            <label for="name-kana">
+              氏名（フリガナ） <span class="required">必須</span>
+            </label>
+            <input type="text" id="name-kana" placeholder="ヤマダ タロウ">
+          </div>
+        </div>
 
-    <div class="form-group">
-      <label for="name-input">氏名 <span style="color:#ef4444">*</span></label>
-      <input type="text" id="name-input" placeholder="山田 太郎">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="birth-date">
+              生年月日 <span class="required">必須</span>
+            </label>
+            <input type="date" id="birth-date" value="1985-01-01">
+          </div>
+          <div class="form-group">
+            <label for="gender">
+              性別 <span class="required">必須</span>
+            </label>
+            <div class="select-wrap">
+              <select id="gender">
+                <option value="">選択してください</option>
+                <option value="male" selected>男性</option>
+                <option value="female">女性</option>
+                <option value="other">その他</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row full">
+          <div class="form-group">
+            <label for="mynumber-input">
+              マイナンバー <span class="required">必須</span>
+            </label>
+            <input type="text" id="mynumber-input" placeholder="000000000000" maxlength="12">
+            <span class="form-hint">マイナンバーカード表面に記載の12桁の番号</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="address-input">新住所 <span style="color:#ef4444">*</span></label>
-      <input type="text" id="address-input" placeholder="東京都千代田区千代田1-1">
+    <!-- セクション2: 転居情報 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-icon">📍</span>
+        <span class="section-title">転居情報</span>
+      </div>
+      <div class="section-body">
+        <div class="info-box">
+          <span class="info-box-icon">ℹ️</span>
+          <span>転居前後の住所が同じ市区町村の場合は「転居届」、別の市区町村の場合は「転出届」と「転入届」が必要です。</span>
+        </div>
+
+        <div class="form-group">
+          <label for="move-date">
+            転居日 <span class="required">必須</span>
+          </label>
+          <input type="date" id="move-date">
+          <span class="form-hint">実際に引越しをした日付</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <!-- 旧住所 -->
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#64748b;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">
+              転居前の住所
+            </div>
+            <div class="form-group">
+              <label for="old-postal">郵便番号 <span class="required">必須</span></label>
+              <div class="input-prefix-wrap">
+                <span class="input-prefix">〒</span>
+                <input type="text" id="old-postal" placeholder="0000000" maxlength="7">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="old-address">住所 <span class="required">必須</span></label>
+              <input type="text" id="old-address" placeholder="東京都千代田区千代田1-1">
+            </div>
+          </div>
+
+          <!-- 新住所 -->
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#3b82f6;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #3b82f6;">
+              転居後の住所（新住所）
+            </div>
+            <div class="form-group">
+              <label for="postal-code">郵便番号 <span class="required">必須</span></label>
+              <div class="input-prefix-wrap">
+                <span class="input-prefix">〒</span>
+                <input type="text" id="postal-code" placeholder="0000000" maxlength="7">
+              </div>
+              <span class="form-hint">ハイフンなし7桁</span>
+            </div>
+            <div class="form-group">
+              <label for="address-input">住所 <span class="required">必須</span></label>
+              <input type="text" id="address-input" placeholder="東京都新宿区新宿1-1">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top: 8px;">
-      <button id="submit-btn" type="button">申請する</button>
+    <!-- セクション3: 同居家族 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-icon">👨‍👩‍👧</span>
+        <span class="section-title">同居家族（転居を共にする方）</span>
+      </div>
+      <div class="section-body">
+        <div class="form-group" style="margin-bottom:0">
+          <label for="family-members">
+            同居家族の氏名 <span class="optional">任意</span>
+          </label>
+          <input type="text" id="family-members" placeholder="山田 花子、山田 一郎（複数の場合は読点で区切り）">
+          <span class="form-hint">転居する方全員の氏名を入力してください。申請者本人は不要です。</span>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <script src="/embed.js"></script>
+    <!-- 同意チェック -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-header-icon">📋</span>
+        <span class="section-title">申請内容の確認・同意</span>
+      </div>
+      <div class="section-body">
+        <div class="consent-box">
+          <p>
+            ご入力いただいた情報は、住民基本台帳の更新および関連する行政手続きに利用されます。
+            申請内容に虚偽がある場合は、住民基本台帳法に基づき罰則が科される場合があります。
+            また、申請後の内容変更・取り消しはできませんのでご注意ください。
+          </p>
+          <label class="checkbox-label">
+            <input type="checkbox" id="consent-check">
+            上記の注意事項を確認し、申請内容に相違がないことを確認しました
+          </label>
+        </div>
+
+        <div class="submit-area">
+          <button id="submit-btn" type="button">申請する →</button>
+          <p class="submit-note">申請後、受付番号がメールに届きます（3営業日以内）</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    &copy; e-Gov 行政手続きポータル &nbsp;|&nbsp; 個人情報保護方針 &nbsp;|&nbsp; 利用規約 &nbsp;|&nbsp; お問い合わせ
+  </footer>
+
+  <script>document.write('<scr'+'ipt src="/embed.js?v='+Date.now()+'"><\/scr'+'ipt>')</script>
   <script>
     const isPreviewMode = new URLSearchParams(location.search).has('preview')
     if (!isPreviewMode) {
       TetsuzukiQuest.start('./demo-scenario.json')
     }
-    // postMessage リスナーは embed.js が自動登録するため追記不要
   </script>
 </body>
 </html>

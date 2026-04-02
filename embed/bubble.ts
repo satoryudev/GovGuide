@@ -53,7 +53,8 @@ export function showBubble(
   message: string,
   onNext: () => void,
   mood?: 'normal' | 'happy' | 'thinking',
-  hideNext = false
+  hideNext = false,
+  extraButton?: { label: string; onClick: () => void },
 ): void {
   removeBubble()
 
@@ -97,22 +98,42 @@ export function showBubble(
   }
   type()
 
-  if (!hideNext) {
-    const btn = document.createElement('button')
-    btn.textContent = '次へ →'
-    btn.style.cssText = `
-      background:#3b82f6;color:white;border:none;
-      padding:6px 16px;border-radius:8px;font-size:13px;
-      cursor:pointer;font-weight:600;
-      transition:background 0.15s;
-    `
-    btn.onmouseover = () => { btn.style.background = '#2563eb' }
-    btn.onmouseout = () => { btn.style.background = '#3b82f6' }
-    btn.onclick = () => { removeBubble(); onNext() }
-    textEl.appendChild(msgEl)
-    textEl.appendChild(btn)
-  } else {
-    textEl.appendChild(msgEl)
+  textEl.appendChild(msgEl)
+
+  if (extraButton || !hideNext) {
+    const row = document.createElement('div')
+    row.style.cssText = 'display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:4px;'
+
+    if (extraButton) {
+      const exBtn = document.createElement('button')
+      exBtn.textContent = extraButton.label
+      exBtn.style.cssText = `
+        background:transparent;border:1.5px solid #0d9488;
+        color:#0d9488;padding:5px 12px;border-radius:8px;font-size:12px;
+        cursor:pointer;font-weight:600;transition:all 0.15s;
+      `
+      exBtn.onmouseover = () => { exBtn.style.background = '#0d9488'; exBtn.style.color = 'white' }
+      exBtn.onmouseout  = () => { exBtn.style.background = 'transparent'; exBtn.style.color = '#0d9488' }
+      exBtn.onmousedown = (e) => e.preventDefault()  // keep focus on input
+      exBtn.onclick = extraButton.onClick
+      row.appendChild(exBtn)
+    }
+
+    if (!hideNext) {
+      const btn = document.createElement('button')
+      btn.textContent = '次へ →'
+      btn.style.cssText = `
+        background:#3b82f6;color:white;border:none;
+        padding:6px 16px;border-radius:8px;font-size:13px;
+        cursor:pointer;font-weight:600;transition:background 0.15s;
+      `
+      btn.onmouseover = () => { btn.style.background = '#2563eb' }
+      btn.onmouseout  = () => { btn.style.background = '#3b82f6' }
+      btn.onclick = () => { removeBubble(); onNext() }
+      row.appendChild(btn)
+    }
+
+    textEl.appendChild(row)
   }
 
   el.innerHTML = getCharacterSvg(mood)

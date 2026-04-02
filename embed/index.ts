@@ -88,6 +88,52 @@ function stopPickMode(): void {
   if (pickCleanup) pickCleanup()
 }
 
+function showStartDialog(scenario: Scenario, onStart: () => void): void {
+  const overlay = document.createElement('div')
+  overlay.id = 'tq-start-dialog'
+  overlay.style.cssText = `
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.45);
+    z-index:100002;
+    display:flex;align-items:center;justify-content:center;
+  `
+  const card = document.createElement('div')
+  card.style.cssText = `
+    background:white;border-radius:20px;
+    padding:32px 28px;max-width:360px;width:90%;
+    box-shadow:0 16px 48px rgba(0,0,0,0.22);
+    text-align:center;
+  `
+  card.innerHTML = `
+    <div style="font-size:48px;margin-bottom:12px;">🧭</div>
+    <div style="font-size:17px;font-weight:700;color:#1f2937;margin-bottom:6px;">
+      ${scenario.title.replace(/</g, '&lt;')}
+    </div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:24px;line-height:1.6;">
+      このページの操作手順をガイドします。<br>チュートリアルを開始しますか？
+    </p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button id="tq-start-btn" style="
+        background:#3b82f6;color:white;border:none;
+        border-radius:10px;padding:12px;font-size:15px;
+        font-weight:700;cursor:pointer;
+      ">▶ 開始する</button>
+      <button id="tq-skip-btn" style="
+        background:transparent;color:#9ca3af;
+        border:1.5px solid #e5e7eb;border-radius:10px;
+        padding:10px;font-size:14px;cursor:pointer;
+      ">スキップ</button>
+    </div>
+  `
+  overlay.appendChild(card)
+  document.body.appendChild(overlay)
+
+  const close = () => overlay.remove()
+  document.getElementById('tq-start-btn')!.onclick = () => { close(); onStart() }
+  document.getElementById('tq-skip-btn')!.onclick = close
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close() })
+}
+
 const TetsuzukiQuest = {
   async start(jsonPath: string): Promise<void> {
     try {
@@ -132,4 +178,18 @@ window.addEventListener('message', (event) => {
   }
 })
 
-export default TetsuzukiQuest
+function startWithPrompt(scenario: Scenario): void {
+  const launch = () => {
+    if (engine) engine.destroy()
+    engine = new ScenarioEngine(scenario)
+    engine.start()
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => showStartDialog(scenario, launch), { once: true })
+  } else {
+    showStartDialog(scenario, launch)
+  }
+}
+
+export const { start, startWithScenario, stop } = TetsuzukiQuest
+export { startWithPrompt }

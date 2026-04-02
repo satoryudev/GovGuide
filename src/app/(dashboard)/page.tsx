@@ -42,9 +42,18 @@ export default function HomePage() {
   }) => {
     const id = `scenario-${Date.now()}`
     const now = new Date().toISOString()
+    const startId = `block-${Date.now()}-start`
+    const endId = `block-${Date.now()}-end`
     const scenario: Scenario = useTemplate
       ? { ...DEMO_SCENARIO, id, title, category, createdAt: now, updatedAt: now }
-      : { id, title, category, blocks: [], startBlockId: null, createdAt: now, updatedAt: now }
+      : {
+          id, title, category, createdAt: now, updatedAt: now,
+          startBlockId: startId,
+          blocks: [
+            { id: startId, type: 'start', nextId: endId },
+            { id: endId,   type: 'end' },
+          ],
+        }
     saveScenario(scenario)
     router.push(`/editor/${id}`)
   }

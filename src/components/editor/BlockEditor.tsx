@@ -9,8 +9,6 @@ import {
   SpeechBlock,
   SpotlightBlock,
   InputSpotlightBlock,
-  DocumentPreviewBlock,
-  ValidationBlock,
   BranchBlock,
 } from '@/types/scenario'
 import {
@@ -68,14 +66,131 @@ function SelectorInput({
   )
 }
 
+const VALIDATION_PRESETS = [
+  { key: 'name',             label: '氏名（ひらがな・漢字）',       pattern: '^[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FAF\\u3400-\\u4DBF\\s\\u3000]+$', error: '氏名を入力してください' },
+  { key: 'furigana-hira',    label: 'ふりがな（ひらがな）',          pattern: '^[\\u3041-\\u3096\\s\\u3000]+$',                                                   error: 'ひらがなで入力してください' },
+  { key: 'furigana-kata',    label: 'ふりがな（カタカナ）',          pattern: '^[\\u30A1-\\u30F6\\s\\u3000]+$',                                                   error: 'カタカナで入力してください' },
+  { key: 'email',            label: 'メールアドレス',                pattern: '^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$',                          error: 'メールアドレスを正しく入力してください' },
+  { key: 'tel-hyphen',       label: '電話番号（ハイフンあり）',      pattern: '^\\d{2,4}-\\d{2,4}-\\d{4}$',                                                      error: 'ハイフン付きで入力してください（例：03-1234-5678）' },
+  { key: 'tel-nohyphen',     label: '電話番号（ハイフンなし）',      pattern: '^\\d{10,11}$',                                                                     error: '10〜11桁の数字で入力してください' },
+  { key: 'zip-hyphen',       label: '郵便番号（ハイフンあり）',      pattern: '^\\d{3}-\\d{4}$',                                                                  error: 'ハイフン付きで入力してください（例：123-4567）' },
+  { key: 'zip-nohyphen',     label: '郵便番号（ハイフンなし）',      pattern: '^\\d{7}$',                                                                         error: '7桁の数字で入力してください' },
+  { key: 'password-alphanum',label: 'パスワード（英数字混合）',      pattern: '^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$',                                        error: '英字と数字を含む8文字以上で入力してください' },
+  { key: 'password-special', label: 'パスワード（英数字記号混合）',  pattern: '^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=])[a-zA-Z\\d!@#$%^&*()_+\\-=]{8,}$', error: '英字・数字・記号を含む8文字以上で入力してください' },
+] as const
+
+function getPresetKey(pattern: string): string {
+  if (/^\^\\d\{(\d+)\}\$$/.test(pattern)) return 'digits'
+  return VALIDATION_PRESETS.find((p) => p.pattern === pattern)?.key ?? 'custom'
+}
+
+function getDigitCount(pattern: string): number {
+  const m = pattern.match(/^\^\\d\{(\d+)\}\$$/)
+  return m ? parseInt(m[1]) : 4
+}
+
+function ValidationPatternSelector({
+  pattern,
+  errorMessage,
+  onChange,
+}: {
+  pattern: string
+  errorMessage: string
+  onChange: (pattern: string, errorMessage: string) => void
+}) {
+  const presetKey = getPresetKey(pattern)
+  const [digitCount, setDigitCount] = useState(() => getDigitCount(pattern))
+
+  const handleSelect = (key: string) => {
+    if (key === 'digits') {
+      onChange(`^\\d{${digitCount}}$`, `${digitCount}桁の数字で入力してください`)
+    } else if (key === 'custom') {
+      onChange('', '')
+    } else {
+      const preset = VALIDATION_PRESETS.find((p) => p.key === key)
+      if (preset) onChange(preset.pattern, preset.error)
+    }
+  }
+
+  const handleDigitCount = (n: number) => {
+    setDigitCount(n)
+    onChange(`^\\d{${n}}$`, `${n}桁の数字で入力してください`)
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="label">パターン</label>
+        <select
+          className="input"
+          value={presetKey}
+          onChange={(e) => handleSelect(e.target.value)}
+        >
+          <optgroup label="氏名・ふりがな">
+            <option value="name">氏名（ひらがな・漢字）</option>
+            <option value="furigana-hira">ふりがな（ひらがな）</option>
+            <option value="furigana-kata">ふりがな（カタカナ）</option>
+          </optgroup>
+          <optgroup label="連絡先">
+            <option value="email">メールアドレス</option>
+            <option value="tel-hyphen">電話番号（ハイフンあり）</option>
+            <option value="tel-nohyphen">電話番号（ハイフンなし）</option>
+          </optgroup>
+          <optgroup label="住所">
+            <option value="zip-hyphen">郵便番号（ハイフンあり）</option>
+            <option value="zip-nohyphen">郵便番号（ハイフンなし）</option>
+          </optgroup>
+          <optgroup label="パスワード">
+            <option value="password-alphanum">パスワード（英数字混合）</option>
+            <option value="password-special">パスワード（英数字記号混合）</option>
+          </optgroup>
+          <optgroup label="その他">
+            <option value="digits">番号入力（桁数指定）</option>
+            <option value="custom">カスタム</option>
+          </optgroup>
+        </select>
+      </div>
+      {presetKey === 'digits' && (
+        <div>
+          <label className="label">桁数</label>
+          <input
+            type="number"
+            className="input w-24"
+            min={1}
+            max={20}
+            value={digitCount}
+            onChange={(e) => handleDigitCount(Math.max(1, parseInt(e.target.value) || 1))}
+          />
+        </div>
+      )}
+      <div>
+        <label className="label">正規表現パターン</label>
+        <input
+          className="input font-mono"
+          value={pattern}
+          onChange={(e) => onChange(e.target.value, errorMessage)}
+          placeholder="^\d{7}$"
+        />
+      </div>
+      <div>
+        <label className="label">エラーメッセージ</label>
+        <input
+          className="input"
+          value={errorMessage}
+          onChange={(e) => onChange(pattern, e.target.value)}
+          placeholder="入力内容が正しくありません"
+        />
+      </div>
+    </div>
+  )
+}
+
 const TYPE_EMOJI: Record<Block['type'], string> = {
   start: '▶',
   end: '⏹',
   speech: '💬',
   spotlight: '🔦',
   'input-spotlight': '✏️',
-  'document-preview': '📄',
-  validation: '✅',
   branch: '🔀',
 }
 
@@ -87,8 +202,6 @@ function blockLabel(b: Block): string {
     case 'speech': return `${emoji} ${b.message.slice(0, 20)}`
     case 'spotlight': return `${emoji} ${b.targetLabel}`
     case 'input-spotlight': return `${emoji} ${b.targetLabel}`
-    case 'document-preview': return `${emoji} ${b.targetLabel}`
-    case 'validation': return `${emoji} ${b.targetLabel}`
     case 'branch': return `${emoji} ${b.question.slice(0, 20)}`
   }
 }
@@ -97,26 +210,67 @@ function nextOptions(blocks: Block[], currentId: string) {
   return blocks.filter((b) => b.id !== currentId && b.type !== 'start')
 }
 
-function StartBlockEditor(_: { block: StartBlock }) {
+function StartBlockEditor({ block }: { block: StartBlock }) {
+  const { updateBlock } = useEditorStore()
   return (
     <div className="space-y-3">
-      <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-center">
-        <div className="text-2xl mb-2">▶</div>
-        <p className="text-sm font-semibold text-green-800">開始ブロック</p>
-        <p className="text-xs text-green-600 mt-1">チュートリアルはここから始まります</p>
+      <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-center">
+        <div className="text-2xl mb-1">▶</div>
+        <p className="text-xs font-semibold text-green-800">チュートリアルはここから始まります</p>
       </div>
-      <p className="text-xs text-gray-400 text-center">次のブロックへの接続はキャンバスの順序で自動的に設定されます</p>
+      <div>
+        <label className="label">セリフ（省略可）</label>
+        <textarea
+          className="input min-h-[60px] resize-y"
+          value={block.message ?? ''}
+          onChange={(e) => updateBlock({ ...block, message: e.target.value || undefined })}
+          placeholder="例：ようこそ！手続きをご案内します。"
+        />
+      </div>
+      <div>
+        <label className="label">気分</label>
+        <select
+          className="input"
+          value={block.characterMood ?? 'normal'}
+          onChange={(e) => updateBlock({ ...block, characterMood: e.target.value as StartBlock['characterMood'] })}
+        >
+          <option value="normal">普通 😐</option>
+          <option value="happy">うれしい 😊</option>
+          <option value="thinking">考え中 🤔</option>
+        </select>
+      </div>
     </div>
   )
 }
 
-function EndBlockEditor(_: { block: EndBlock }) {
+function EndBlockEditor({ block }: { block: EndBlock }) {
+  const { updateBlock } = useEditorStore()
   return (
     <div className="space-y-3">
-      <div className="rounded-lg bg-gray-50 border border-gray-200 p-4 text-center">
-        <div className="text-2xl mb-2">⏹</div>
-        <p className="text-sm font-semibold text-gray-700">終了ブロック</p>
-        <p className="text-xs text-gray-500 mt-1">チュートリアルはここで終了します</p>
+      <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-center">
+        <div className="text-2xl mb-1">⏹</div>
+        <p className="text-xs font-semibold text-gray-700">チュートリアルはここで終了します</p>
+      </div>
+      <div>
+        <label className="label">セリフ（省略可）</label>
+        <textarea
+          className="input min-h-[60px] resize-y"
+          value={block.message ?? ''}
+          onChange={(e) => updateBlock({ ...block, message: e.target.value || undefined })}
+          placeholder="例：お疲れさまでした！手続きが完了しました。"
+        />
+      </div>
+      <div>
+        <label className="label">気分</label>
+        <select
+          className="input"
+          value={block.characterMood ?? 'normal'}
+          onChange={(e) => updateBlock({ ...block, characterMood: e.target.value as EndBlock['characterMood'] })}
+        >
+          <option value="normal">普通 😐</option>
+          <option value="happy">うれしい 😊</option>
+          <option value="thinking">考え中 🤔</option>
+        </select>
       </div>
     </div>
   )
@@ -132,6 +286,7 @@ function SpeechEditor({ block }: { block: SpeechBlock }) {
           className="input min-h-[80px] resize-y"
           value={block.message}
           onChange={(e) => updateBlock({ ...block, message: e.target.value })}
+          placeholder="例：こんにちは！次のステップを案内します。"
         />
       </div>
       <div>
@@ -158,7 +313,7 @@ function SpotlightEditor({ block }: { block: SpotlightBlock }) {
     <div className="space-y-3">
       <div>
         <label className="label">説明文</label>
-        <textarea className="input min-h-[60px] resize-y" value={block.message} onChange={(e) => updateBlock({ ...block, message: e.target.value })} />
+        <textarea className="input min-h-[60px] resize-y" value={block.message} onChange={(e) => updateBlock({ ...block, message: e.target.value })} placeholder="例：「申請する」ボタンをクリックしてください。" />
       </div>
       <SelectorInput
         label="CSSセレクタ"
@@ -171,7 +326,7 @@ function SpotlightEditor({ block }: { block: SpotlightBlock }) {
       />
       <div>
         <label className="label">ラベル名</label>
-        <input className="input" value={block.targetLabel} onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })} />
+        <input className="input" value={block.targetLabel} onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })} placeholder="例：申請するボタン" />
       </div>
     </div>
   )
@@ -179,11 +334,32 @@ function SpotlightEditor({ block }: { block: SpotlightBlock }) {
 
 function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
   const { updateBlock } = useEditorStore()
+  const validationEnabled = block.validationPattern !== undefined
+  const previewEnabled = block.documentType !== undefined
+
+  const toggleValidation = (enabled: boolean) => {
+    if (enabled) {
+      updateBlock({ ...block, validationPattern: '', errorMessage: '入力内容が正しくありません' })
+    } else {
+      const { validationPattern: _, errorMessage: __, ...rest } = block
+      updateBlock(rest as InputSpotlightBlock)
+    }
+  }
+
+  const togglePreview = (enabled: boolean) => {
+    if (enabled) {
+      updateBlock({ ...block, documentType: 'mynumber-card', buttonLabel: '見本を確認' })
+    } else {
+      const { documentType: _, buttonLabel: __, ...rest } = block
+      updateBlock(rest as InputSpotlightBlock)
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div>
         <label className="label">説明文</label>
-        <textarea className="input min-h-[60px] resize-y" value={block.message} onChange={(e) => updateBlock({ ...block, message: e.target.value })} />
+        <textarea className="input min-h-[60px] resize-y" value={block.message} onChange={(e) => updateBlock({ ...block, message: e.target.value })} placeholder="例：郵便番号を入力してください。" />
       </div>
       <SelectorInput
         label="対象 input の ID"
@@ -196,21 +372,64 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
       />
       <div>
         <label className="label">ラベル名</label>
-        <input className="input" value={block.targetLabel} onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })} />
+        <input className="input" value={block.targetLabel} onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })} placeholder="例：郵便番号入力欄" />
+      </div>
+
+      {/* バリデーション設定 */}
+      <div className="border-t border-gray-100 pt-3">
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" checked={validationEnabled} onChange={(e) => toggleValidation(e.target.checked)} className="w-4 h-4 accent-blue-500" />
+          <span className="text-xs font-semibold text-gray-600">バリデーションを有効にする</span>
+        </label>
+        {validationEnabled && (
+          <div className="mt-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
+            <ValidationPatternSelector
+              pattern={block.validationPattern ?? ''}
+              errorMessage={block.errorMessage ?? ''}
+              onChange={(p, e) => updateBlock({ ...block, validationPattern: p, errorMessage: e })}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* 書類プレビュー設定 */}
+      <div className="border-t border-gray-100 pt-3">
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" checked={previewEnabled} onChange={(e) => togglePreview(e.target.checked)} className="w-4 h-4 accent-teal-500" />
+          <span className="text-xs font-semibold text-gray-600">書類プレビューを追加する</span>
+        </label>
+        {previewEnabled && (
+          <div className="mt-3 rounded-lg bg-teal-50 border border-teal-200 p-3">
+            <DocTypeSelector
+              value={block.documentType ?? 'mynumber-card'}
+              onChange={(v) => updateBlock({ ...block, documentType: v })}
+              buttonLabel={block.buttonLabel ?? ''}
+              onButtonLabelChange={(v) => updateBlock({ ...block, buttonLabel: v })}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
-  const { updateBlock } = useEditorStore()
-
+/** 書類種別セレクター＋カスタムアップロード（DocumentPreview と InputSpotlight で共用） */
+function DocTypeSelector({
+  value,
+  onChange,
+  buttonLabel,
+  onButtonLabelChange,
+}: {
+  value: string
+  onChange: (v: string) => void
+  buttonLabel: string
+  onButtonLabelChange: (v: string) => void
+}) {
   const [customTypes, setCustomTypes] = useState<CustomDocType[]>(() => loadCustomDocTypes())
   const [uploading, setUploading] = useState(false)
   const [newLabel, setNewLabel] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
   const refresh = useCallback(() => setCustomTypes(loadCustomDocTypes()), [])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -222,7 +441,7 @@ function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
       const id = `cdoc-${Math.random().toString(36).slice(2, 7)}`
       saveCustomDocType({ id, label: newLabel.trim(), imageBase64 })
       refresh()
-      updateBlock({ ...block, documentType: id })
+      onChange(id)
       setNewLabel('')
       setShowUpload(false)
     } finally {
@@ -235,38 +454,15 @@ function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
     if (!confirm('この書類種別を削除しますか？')) return
     deleteCustomDocType(id)
     refresh()
-    if (block.documentType === id) updateBlock({ ...block, documentType: 'mynumber-card' })
+    if (value === id) onChange('mynumber-card')
   }
 
   return (
     <div className="space-y-3">
       <div>
-        <label className="label">説明文</label>
-        <textarea className="input min-h-[60px] resize-y" value={block.message} onChange={(e) => updateBlock({ ...block, message: e.target.value })} />
-      </div>
-      <SelectorInput
-        label="対象 input の ID"
-        value={block.targetId}
-        onChange={(v) => updateBlock({ ...block, targetId: v })}
-        blockId={block.id}
-        field="targetId"
-        withHash={false}
-        placeholder="mynumber-input"
-      />
-      <div>
-        <label className="label">ラベル名</label>
-        <input className="input" value={block.targetLabel} onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })} />
-      </div>
-
-      {/* 書類種別セレクト + 追加ボタン */}
-      <div>
         <label className="label">書類種別</label>
         <div className="flex gap-1">
-          <select
-            className="input flex-1"
-            value={block.documentType}
-            onChange={(e) => updateBlock({ ...block, documentType: e.target.value })}
-          >
+          <select className="input flex-1" value={value} onChange={(e) => onChange(e.target.value)}>
             <optgroup label="内蔵">
               <option value="mynumber-card">マイナンバーカード</option>
               <option value="receipt">領収書</option>
@@ -283,25 +479,16 @@ function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
           <button
             type="button"
             onClick={() => setShowUpload((v) => !v)}
-            className="px-2.5 rounded border border-teal-400 text-teal-600 text-sm
-              hover:bg-teal-50 transition-colors"
+            className="px-2.5 rounded border border-teal-400 text-teal-600 text-sm hover:bg-teal-50 transition-colors"
             title="書類画像を追加"
-          >
-            +
-          </button>
+          >+</button>
         </div>
       </div>
 
-      {/* アップロードパネル */}
       {showUpload && (
         <div className="rounded-lg border border-teal-200 bg-teal-50 p-3 space-y-2">
           <p className="text-xs font-semibold text-teal-700">書類画像を追加</p>
-          <input
-            className="input text-xs"
-            placeholder="書類名（例: パスポート）"
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-          />
+          <input className="input text-xs" placeholder="書類名（例: パスポート）" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} />
           <input
             ref={fileInputRef}
             type="file"
@@ -317,7 +504,6 @@ function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
         </div>
       )}
 
-      {/* カスタム書類の管理リスト */}
       {customTypes.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs text-gray-400">カスタム書類</p>
@@ -325,11 +511,7 @@ function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
             <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded bg-gray-50 border border-gray-100">
               <img src={c.imageBase64} alt={c.label} className="w-8 h-8 object-cover rounded" />
               <span className="text-xs text-gray-700 flex-1 truncate">{c.label}</span>
-              <button
-                onClick={() => handleDelete(c.id)}
-                className="text-gray-300 hover:text-red-500 transition-colors text-base leading-none"
-                title="削除"
-              >×</button>
+              <button onClick={() => handleDelete(c.id)} className="text-gray-300 hover:text-red-500 transition-colors text-base leading-none" title="削除">×</button>
             </div>
           ))}
         </div>
@@ -337,40 +519,7 @@ function DocumentPreviewEditor({ block }: { block: DocumentPreviewBlock }) {
 
       <div>
         <label className="label">ボタン文言</label>
-        <input className="input" value={block.buttonLabel ?? ''} onChange={(e) => updateBlock({ ...block, buttonLabel: e.target.value })} placeholder="見本を確認" />
-      </div>
-    </div>
-  )
-}
-
-function ValidationEditor({ block }: { block: ValidationBlock }) {
-  const { updateBlock } = useEditorStore()
-  return (
-    <div className="space-y-3">
-      <div>
-        <label className="label">説明文</label>
-        <textarea className="input min-h-[60px] resize-y" value={block.message} onChange={(e) => updateBlock({ ...block, message: e.target.value })} />
-      </div>
-      <SelectorInput
-        label="CSSセレクタ"
-        value={block.targetSelector}
-        onChange={(v) => updateBlock({ ...block, targetSelector: v })}
-        blockId={block.id}
-        field="targetSelector"
-        withHash={true}
-        placeholder="#postal-code"
-      />
-      <div>
-        <label className="label">ラベル名</label>
-        <input className="input" value={block.targetLabel} onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })} />
-      </div>
-      <div>
-        <label className="label">正規表現パターン</label>
-        <input className="input font-mono" value={block.validationPattern} onChange={(e) => updateBlock({ ...block, validationPattern: e.target.value })} placeholder="^\d{7}$" />
-      </div>
-      <div>
-        <label className="label">エラーメッセージ</label>
-        <input className="input" value={block.errorMessage} onChange={(e) => updateBlock({ ...block, errorMessage: e.target.value })} />
+        <input className="input" value={buttonLabel} onChange={(e) => onButtonLabelChange(e.target.value)} placeholder="見本を確認" />
       </div>
     </div>
   )
@@ -383,7 +532,7 @@ function BranchEditor({ block }: { block: BranchBlock }) {
     <div className="space-y-3">
       <div>
         <label className="label">質問文</label>
-        <textarea className="input min-h-[60px] resize-y" value={block.question} onChange={(e) => updateBlock({ ...block, question: e.target.value })} />
+        <textarea className="input min-h-[60px] resize-y" value={block.question} onChange={(e) => updateBlock({ ...block, question: e.target.value })} placeholder="例：同じ市区町村内への引越しですか？" />
       </div>
       <div>
         <label className="label">はい → 次のブロック</label>
@@ -428,8 +577,6 @@ export default function BlockEditor() {
         {block.type === 'speech' && <SpeechEditor block={block} />}
         {block.type === 'spotlight' && <SpotlightEditor block={block} />}
         {block.type === 'input-spotlight' && <InputSpotlightEditor block={block} />}
-        {block.type === 'document-preview' && <DocumentPreviewEditor block={block} />}
-        {block.type === 'validation' && <ValidationEditor block={block} />}
         {block.type === 'branch' && <BranchEditor block={block} />}
       </div>
     </div>

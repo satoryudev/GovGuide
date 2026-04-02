@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useEditorStore } from '@/store/editorStore'
+import { saveScenario } from '@/lib/scenarioStorage'
+import { Scenario } from '@/types/scenario'
 
 // 重複注入を検知するためのマーカー
 const MARKER_START = '<!-- GovGuide Tutorial Start -->'
@@ -19,10 +22,34 @@ function buildEmbedBlock(embedJs: string, scenarioJson: string): string {
     embedJs,
     '<\/script>',
     '<script>',
-    `TetsuzukiQuest.startWithScenario(${scenarioJson});`,
+    `TetsuzukiQuest.startWithPrompt(${scenarioJson});`,
     '<\/script>',
     MARKER_END,
   ].join('\n')
+}
+
+function downloadBlob(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  Object.assign(document.createElement('a'), { href: url, download: filename }).click()
+  URL.revokeObjectURL(url)
+}
+
+/** HTML 文字列にチュートリアルブロックを注入して返す */
+function injectBlock(content: string, block: string): string {
+  const markerStartEsc = MARKER_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const markerEndEsc   = MARKER_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const existingRegex  = new RegExp(`${markerStartEsc}[\\s\\S]*?${markerEndEsc}`)
+
+  if (existingRegex.test(content)) {
+    // 既存マーカーを置き換え（() => block で $ の特殊解釈を回避）
+    return content.replace(existingRegex, () => block)
+  }
+  if (/<\/body>/i.test(content)) {
+    return content.replace(/<\/body>/i, () => `${block}\n</body>`)
+  }
+  // </body> がない場合は末尾に追記
+  return content + '\n' + block
 }
 
 interface Props {
@@ -30,13 +57,15 @@ interface Props {
 }
 
 export default function PreviewToolbar({ onExportCallback }: Props) {
-  const { scenario } = useEditorStore()
+  const { scenario, setScenario } = useEditorStore()
+  const router = useRouter()
 
   const [embedModalOpen, setEmbedModalOpen] = useState(false)
   const [embedCode, setEmbedCode] = useState('')
   const [copied, setCopied] = useState(false)
   const [exporting, setExporting] = useState(false)
   const fallbackFileRef = useRef<HTMLInputElement>(null)
+  const jsonImportRef = useRef<HTMLInputElement>(null)
 
   // ---- JSON ダウンロード ----
   const handleJsonExport = () => {
@@ -46,6 +75,26 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
     Object.assign(document.createElement('a'), { href: url, download: `${scenario.id}.json` }).click()
     URL.revokeObjectURL(url)
     onExportCallback?.()
+  }
+
+  // ---- JSON インポート ----
+  const handleJsonImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text) as Scenario
+      if (!data.id || !Array.isArray(data.blocks)) {
+        alert('有効なシナリオJSONではありません。')
+        return
+      }
+      saveScenario(data)
+      setScenario(data)
+      router.push(`/editor/${data.id}`)
+    } catch {
+      alert('JSONの読み込みに失敗しました。')
+    }
   }
 
   // ---- 埋め込みコード モーダルを開く ----
@@ -75,29 +124,17 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
       const block = buildEmbedBlock(embedJs, json)
 
       if (typeof window !== 'undefined' && 'showOpenFilePicker' in window) {
-        // File System Access API（Chrome / Edge）
+        // ファイル選択（読み込みのみ）
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const [fileHandle] = await (window as any).showOpenFilePicker({
           types: [{ description: 'HTMLファイル', accept: { 'text/html': ['.html', '.htm'] } }],
         })
         const file = await fileHandle.getFile()
-        let content: string = await file.text()
-
-        // 既存の注入を置き換えるか、</body> 直前に追記
-        const markerStartEsc = MARKER_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const markerEndEsc = MARKER_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const existingRegex = new RegExp(`${markerStartEsc}[\\s\\S]*?${markerEndEsc}`)
-        content = existingRegex.test(content)
-          ? content.replace(existingRegex, block)
-          : content.replace(/<\/body>/i, `${block}\n</body>`)
-
-        const writable = await fileHandle.createWritable()
-        await writable.write(content)
-        await writable.close()
+        const content = injectBlock(await file.text(), block)
+        const suggestedName = file.name.replace(/\.html?$/i, '') + '-tutorial.html'
+        downloadBlob(content, suggestedName)
         onExportCallback?.()
-        alert('✅ HTMLファイルへの書き出しが完了しました。')
       } else {
-        // フォールバック：ファイルを読み込んで修正版をダウンロード
         fallbackFileRef.current?.click()
       }
     } catch (e) {
@@ -119,32 +156,29 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
     const embedJs = await fetchEmbedJs()
     const json = JSON.stringify(scenario, null, 2)
     const block = buildEmbedBlock(embedJs, json)
-
-    let content = await file.text()
-    const markerStartEsc = MARKER_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const markerEndEsc = MARKER_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const existingRegex = new RegExp(`${markerStartEsc}[\\s\\S]*?${markerEndEsc}`)
-    content = existingRegex.test(content)
-      ? content.replace(existingRegex, block)
-      : content.replace(/<\/body>/i, `${block}\n</body>`)
-
-    const blob = new Blob([content], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    Object.assign(document.createElement('a'), { href: url, download: file.name }).click()
-    URL.revokeObjectURL(url)
+    const content = injectBlock(await file.text(), block)
+    const suggestedName = file.name.replace(/\.html?$/i, '') + '-tutorial.html'
+    downloadBlob(content, suggestedName)
     onExportCallback?.()
   }
 
   return (
     <>
       <div id="preview-toolbar" className="bg-white border-b border-gray-200 flex-shrink-0 px-3 py-1.5">
-        {/* 隠しフォールバック用ファイル入力 */}
+        {/* 隠しファイル入力（フォールバック用） */}
         <input
           ref={fallbackFileRef}
           type="file"
           accept=".html,.htm"
           className="hidden"
           onChange={handleFallbackFile}
+        />
+        <input
+          ref={jsonImportRef}
+          type="file"
+          accept=".json,application/json"
+          className="hidden"
+          onChange={handleJsonImport}
         />
 
         {/* 1段：エクスポート操作 */}
@@ -169,7 +203,14 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
             className="text-xs px-2.5 py-1.5 rounded border border-gray-300 text-gray-600
               hover:bg-gray-50 transition-colors whitespace-nowrap"
           >
-            ↓ JSON
+            保存
+          </button>
+          <button
+            onClick={() => jsonImportRef.current?.click()}
+            className="text-xs px-2.5 py-1.5 rounded border border-gray-300 text-gray-600
+              hover:bg-gray-50 transition-colors whitespace-nowrap"
+          >
+            ダウンロード
           </button>
         </div>
       </div>

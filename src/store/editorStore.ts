@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { Block, BranchBlock, Scenario } from '@/types/scenario'
 import { saveScenario } from '@/lib/scenarioStorage'
-import { getBranchChain, getBranchChainIds } from '@/lib/branchChain'
+import { getBranchChain, getBranchChainIds, collectBranchSubtreeIds } from '@/lib/branchChain'
 
 /**
  * キャンバス上の順序に基づき nextId を自動計算する。
@@ -68,9 +68,12 @@ export interface PickRequest {
 interface EditorState {
   scenario: Scenario | null
   selectedBlockId: string | null
+  editorOpenKey: number
   pickRequest: PickRequest | null
+  activeBlockId: string | null
   setScenario: (scenario: Scenario) => void
   setSelectedBlockId: (id: string | null) => void
+  setActiveBlockId: (id: string | null) => void
   updateBlock: (block: Block) => void
   addBlock: (block: Block) => void
   insertBlockAt: (block: Block, index: number) => void
@@ -90,11 +93,15 @@ interface EditorState {
 export const useEditorStore = create<EditorState>((set, get) => ({
   scenario: null,
   selectedBlockId: null,
+  editorOpenKey: 0,
   pickRequest: null,
+  activeBlockId: null,
 
   setScenario: (scenario) => set({ scenario, selectedBlockId: null }),
 
-  setSelectedBlockId: (id) => set({ selectedBlockId: id }),
+  setActiveBlockId: (id) => set({ activeBlockId: id }),
+
+  setSelectedBlockId: (id) => set((s) => ({ selectedBlockId: id, editorOpenKey: id !== null ? s.editorOpenKey + 1 : s.editorOpenKey })),
 
   updateBlock: (block) => {
     const { scenario } = get()
@@ -236,8 +243,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { scenario, selectedBlockId } = get()
     if (!scenario) return
 
-    // チェーン内のブロックを削除する場合、前後のリンクを繋ぎ直す
     const blockToRemove = scenario.blocks.find((b) => b.id === id)
+
+    // 分岐ブロックの場合は yes/no サブツリーも一括削除
+    const subtreeIds = blockToRemove?.type === 'branch'
+      ? collectBranchSubtreeIds(scenario.blocks, id)
+      : new Set<string>()
+    const removeIds = new Set([id, ...Array.from(subtreeIds)])
+
     const removedNextId = blockToRemove && 'nextId' in blockToRemove
       ? (blockToRemove as { nextId: string | null }).nextId
       : null
@@ -252,7 +265,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     ) as BranchBlock | undefined
 
     const patchedBlocks = scenario.blocks
-      .filter((b) => b.id !== id)
+      .filter((b) => !removeIds.has(b.id))
       .map((b) => {
         if (prevInChain && b.id === prevInChain.id) {
           return { ...b, nextId: removedNextId } as Block
