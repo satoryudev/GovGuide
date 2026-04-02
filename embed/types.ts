@@ -1,14 +1,18 @@
-export type BlockType = 'start' | 'end' | 'speech' | 'spotlight' | 'input-spotlight' | 'document-preview' | 'validation' | 'branch'
+export type BlockType = 'start' | 'end' | 'speech' | 'spotlight' | 'input-spotlight' | 'branch'
 
 export interface StartBlock {
   id: string
   type: 'start'
+  message?: string
+  characterMood?: 'normal' | 'happy' | 'thinking'
   nextId: string | null
 }
 
 export interface EndBlock {
   id: string
   type: 'end'
+  message?: string
+  characterMood?: 'normal' | 'happy' | 'thinking'
 }
 
 export interface SpeechBlock {
@@ -35,6 +39,11 @@ export interface InputSpotlightBlock {
   targetId: string
   targetLabel: string
   nextId: string | null
+  validationPattern?: string
+  errorMessage?: string
+  /** 書類プレビュー設定（省略時はプレビューなし） */
+  documentType?: string
+  buttonLabel?: string
 }
 
 export interface DocumentPreviewBlock {
@@ -46,17 +55,6 @@ export interface DocumentPreviewBlock {
   documentType: 'mynumber-card' | 'receipt' | 'residence-certificate' | 'custom' | (string & {})
   previewImageUrl?: string
   buttonLabel?: string
-  nextId: string | null
-}
-
-export interface ValidationBlock {
-  id: string
-  type: 'validation'
-  message: string
-  targetSelector: string
-  targetLabel: string
-  validationPattern: string
-  errorMessage: string
   nextId: string | null
 }
 
@@ -74,8 +72,6 @@ export type Block =
   | SpeechBlock
   | SpotlightBlock
   | InputSpotlightBlock
-  | DocumentPreviewBlock
-  | ValidationBlock
   | BranchBlock
 
 export interface Scenario {

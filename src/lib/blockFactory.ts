@@ -8,17 +8,13 @@ export function createBlock(type: BlockType): Block {
     case 'end':
       return { id, type: 'end' }
     case 'speech':
-      return { id, type: 'speech', message: '新しいセリフ', characterMood: 'normal', nextId: null }
+      return { id, type: 'speech', message: '', characterMood: 'normal', nextId: null }
     case 'spotlight':
-      return { id, type: 'spotlight', message: '説明文', targetSelector: '#target', targetLabel: '対象要素', nextId: null }
+      return { id, type: 'spotlight', message: '', targetSelector: '', targetLabel: '', nextId: null }
     case 'input-spotlight':
-      return { id, type: 'input-spotlight', message: '入力してください', targetId: 'input-id', targetLabel: '入力欄', nextId: null }
-    case 'document-preview':
-      return { id, type: 'document-preview', message: '書類を確認してください', targetId: 'input-id', targetLabel: '入力欄', documentType: 'mynumber-card', nextId: null }
-    case 'validation':
-      return { id, type: 'validation', message: '正しく入力してください', targetSelector: '#input-id', targetLabel: '入力欄', validationPattern: '^.+$', errorMessage: '入力が正しくありません', nextId: null }
+      return { id, type: 'input-spotlight', message: '', targetId: '', targetLabel: '', nextId: null }
     case 'branch':
-      return { id, type: 'branch', question: 'はいですか？', yesNextId: null, noNextId: null, nextId: null }
+      return { id, type: 'branch', question: '', yesNextId: null, noNextId: null, nextId: null }
   }
 }
 
@@ -28,8 +24,8 @@ export function createBranchGroup(): [BranchBlock, SpeechBlock, SpeechBlock] {
   const yesId    = `block-${Math.random().toString(36).slice(2, 7)}`
   const noId     = `block-${Math.random().toString(36).slice(2, 7)}`
   return [
-    { id: branchId, type: 'branch',  question: 'はいですか？', yesNextId: yesId, noNextId: noId, nextId: null },
-    { id: yesId,    type: 'speech',  message: 'はいの場合のセリフ',  characterMood: 'normal', nextId: null },
-    { id: noId,     type: 'speech',  message: 'いいえの場合のセリフ', characterMood: 'normal', nextId: null },
+    { id: branchId, type: 'branch',  question: '', yesNextId: yesId, noNextId: noId, nextId: null },
+    { id: yesId,    type: 'speech',  message: '', characterMood: 'normal', nextId: null },
+    { id: noId,     type: 'speech',  message: '', characterMood: 'normal', nextId: null },
   ]
 }

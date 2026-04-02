@@ -18,6 +18,7 @@ import { useOnboarding } from '@/hooks/useOnboarding'
 import EditorTour from '@/components/onboarding/EditorTour'
 import { getScenarioStatus, ScenarioStatus } from '@/lib/scenarioUtils'
 import { Scenario } from '@/types/scenario'
+import { findBranchStackForBlock } from '@/lib/branchChain'
 
 const PANEL_MIN = 160
 const COLLAPSED_W = 32
@@ -58,21 +59,6 @@ function StatusBadge({ scenario }: { scenario: Scenario }) {
   return <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${cls}`}>{label}</span>
 }
 
-function EditorProgressBar({ steps }: { steps: Array<{ completed: boolean }> }) {
-  const done = steps.filter((s) => s.completed).length
-  const pct = Math.round((done / steps.length) * 100)
-  return (
-    <div className="flex items-center gap-2 w-44">
-      <div className="flex-1 bg-gray-100 rounded-full h-1.5">
-        <div
-          className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">{done}/{steps.length}</span>
-    </div>
-  )
-}
 
 /** 最小化時に縦書きで表示するタブ */
 function CollapsedTab({ title, onExpand }: { title: string; onExpand: () => void }) {
@@ -94,8 +80,27 @@ function CollapsedTab({ title, onExpand }: { title: string; onExpand: () => void
 
 /** ブランチビューとメインキャンバスを切り替えるパネルコンテンツ */
 function CanvasPanelContent({ onExportCallback }: { onExportCallback: () => void }) {
-  const { branchView } = useBranchView()
-  if (branchView) return <BranchCanvas />
+  const { currentBranchView, setBranchView, resetBranchView } = useBranchView()
+  const { activeBlockId } = useEditorStore()
+
+  // activeBlockId が変わったらブランチビューを自動切り替えしてスクロール
+  useEffect(() => {
+    if (!activeBlockId) return
+    const blocks = useEditorStore.getState().scenario?.blocks ?? []
+    const stack = findBranchStackForBlock(blocks, activeBlockId)
+    if (stack.length === 0) {
+      resetBranchView()
+    } else {
+      setBranchView(stack[stack.length - 1])
+    }
+    requestAnimationFrame(() => {
+      document.querySelector(`[data-block-id="${activeBlockId}"]`)
+        ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBlockId, resetBranchView, setBranchView])
+
+  if (currentBranchView) return <BranchCanvas />
   return (
     <>
       <PreviewToolbar onExportCallback={onExportCallback} />
@@ -107,7 +112,7 @@ function CanvasPanelContent({ onExportCallback }: { onExportCallback: () => void
 export default function EditorPage() {
   const params = useParams()
   const id = params.id as string
-  const { scenario, setScenario, updateScenarioMeta, pickRequest, applyPick, cancelPick, selectedBlockId } = useEditorStore()
+  const { scenario, setScenario, updateScenarioMeta, pickRequest, applyPick, cancelPick, selectedBlockId, setSelectedBlockId, editorOpenKey, setActiveBlockId } = useEditorStore()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const localBlobRef = useRef<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -116,11 +121,9 @@ export default function EditorPage() {
   const [localFileName, setLocalFileName] = useState<string | null>(null)
   const { tourCompleted, completeTour } = useOnboarding()
   const [tourActive, setTourActive] = useState(false)
-  const [previewPlayed, setPreviewPlayed] = useState(false)
-  const [exported, setExported] = useState(false)
 
   const [widths, setWidths] = useState<PanelWidths>({ palette: 220, canvas: 340, preview: 420, blockEditor: 260 })
-  const [collapsed, setCollapsed] = useState<Collapsed>({ palette: false, preview: false, blockEditor: false })
+  const [collapsed, setCollapsed] = useState<Collapsed>({ palette: false, preview: false, blockEditor: true })
 
   // mousedown 時に一度だけ記録する startWidth refs
   const paletteStartRef = useRef(widths.palette)
@@ -132,6 +135,7 @@ export default function EditorPage() {
   const paletteWRef = useRef(0)
   const previewWRef = useRef(0)
   const blockEditorWRef = useRef(0)
+  const blockEditorPanelRef = useRef<HTMLDivElement>(null)
 
   const toggleCollapse = (panel: keyof Collapsed) => {
     // 展開するとき、隣のパネルのstartRefを更新
@@ -151,10 +155,27 @@ export default function EditorPage() {
 
   // ⋮ ボタンでブロックが選択されたらブロック設定パネルを展開する
   useEffect(() => {
-    if (selectedBlockId) {
-      setCollapsed((c) => ({ ...c, blockEditor: false }))
+    if (!selectedBlockId) return
+    setCollapsed((c) => ({ ...c, blockEditor: false }))
+    // プレビューが広すぎてブロック設定が隠れる場合は縮小する
+    const containerW = containerRef.current?.clientWidth ?? 0
+    const maxPreview = containerW - paletteWRef.current - widths.blockEditor - CANVAS_MIN - DIVIDERS_W
+    if (previewWRef.current > maxPreview) {
+      setWidths((w) => ({ ...w, preview: Math.max(PANEL_MIN, maxPreview) }))
     }
-  }, [selectedBlockId])
+  }, [editorOpenKey])
+
+  // ブロック設定パネル外クリックで閉じる
+  useEffect(() => {
+    if (collapsed.blockEditor) return
+    const handleMouseDown = (e: MouseEvent) => {
+      if (blockEditorPanelRef.current && !blockEditorPanelRef.current.contains(e.target as Node)) {
+        setCollapsed((c) => ({ ...c, blockEditor: true }))
+      }
+    }
+    document.addEventListener('mousedown', handleMouseDown)
+    return () => document.removeEventListener('mousedown', handleMouseDown)
+  }, [collapsed.blockEditor, setSelectedBlockId])
 
   useEffect(() => {
     if (!pickRequest) return
@@ -163,6 +184,15 @@ export default function EditorPage() {
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
+      if (e.data?.type === 'TETSUZUKI_QUEST_FINISHED') {
+        setIsPlaying(false)
+        setActiveBlockId(null)
+        return
+      }
+      if (e.data?.type === 'TETSUZUKI_QUEST_BLOCK_ACTIVE') {
+        setActiveBlockId(e.data.blockId ?? null)
+        return
+      }
       if (e.data?.type !== 'TETSUZUKI_QUEST_ELEMENT_PICKED') return
       const { selector, id: elemId } = e.data as { selector: string; id: string }
       if (!pickRequest) return
@@ -216,7 +246,6 @@ export default function EditorPage() {
       iframe.onload = null
       iframe.contentWindow?.postMessage({ type: 'TETSUZUKI_QUEST_START', scenario }, '*')
       setIsPlaying(true)
-      setPreviewPlayed(true)
     }
   }
 
@@ -225,27 +254,17 @@ export default function EditorPage() {
     if (!iframe) return
     iframe.src = getPreviewSrc()
     setIsPlaying(false)
+    setActiveBlockId(null)
   }
 
   const paletteW = collapsed.palette ? COLLAPSED_W : widths.palette
   const previewW = collapsed.preview ? COLLAPSED_W : widths.preview
-  const blockEditorW = collapsed.blockEditor ? COLLAPSED_W : widths.blockEditor
+  const blockEditorW = collapsed.blockEditor ? 0 : widths.blockEditor
 
   // レンダーのたびに最新値を ref に反映（リサイズ上限計算で使用）
   paletteWRef.current = paletteW
   previewWRef.current = previewW
   blockEditorWRef.current = blockEditorW
-
-  const stepperSteps = [
-    { label: 'ブロックを追加', completed: (scenario?.blocks.length ?? 0) > 0 },
-    { label: 'ブロックを設定', completed: scenario?.blocks.some((b) => {
-      if (b.type === 'speech') return b.message !== '新しいセリフ'
-      if (b.type === 'branch') return b.question !== 'はいですか？'
-      return false
-    }) ?? false },
-    { label: 'プレビュー確認', completed: previewPlayed },
-    { label: 'エクスポート', completed: exported },
-  ]
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -286,10 +305,9 @@ export default function EditorPage() {
           </select>
         </div>
 
-        {/* Right: status badge + linear progress */}
+        {/* Right: status badge */}
         <div className="flex items-center gap-4 flex-shrink-0 ml-4">
           <StatusBadge scenario={scenario} />
-          <EditorProgressBar steps={stepperSteps} />
         </div>
       </header>
 
@@ -320,10 +338,37 @@ export default function EditorPage() {
           }}
         />
 
-        {/* ── キャンバス ── */}
-        <div className="flex flex-col flex-1 min-w-[320px] overflow-hidden">
-          <CanvasPanelContent onExportCallback={() => setExported(true)} />
-        </div>
+        {/* ── キャンバスエリア（キャンバス + ブロック設定）── */}
+        <div className="flex flex-row flex-1 overflow-hidden">
+
+          {/* キャンバス本体 */}
+          <div className="flex flex-col flex-1 min-w-[320px] overflow-hidden">
+            <CanvasPanelContent onExportCallback={() => {}} />
+          </div>
+
+          {/* 内部 ResizeDivider（キャンバス ↔ ブロック設定）*/}
+          {!collapsed.blockEditor && (
+            <ResizeDivider
+              onDragStart={() => { blockEditorStartRef.current = widths.blockEditor }}
+              onResize={(delta) => {
+                const containerW = containerRef.current?.clientWidth ?? 0
+                const maxBlockEditor = containerW - paletteWRef.current - previewWRef.current - CANVAS_MIN - DIVIDERS_W
+                setWidths((w) => ({ ...w, blockEditor: Math.max(PANEL_MIN, Math.min(maxBlockEditor, blockEditorStartRef.current - delta)) }))
+              }}
+            />
+          )}
+
+          {/* ── ブロック設定 ── */}
+          {!collapsed.blockEditor && (
+            <div ref={blockEditorPanelRef} className="flex flex-col overflow-hidden flex-shrink-0" style={{ width: blockEditorW }}>
+              <PanelHeader title="ブロック設定" collapsed={false} onToggle={() => toggleCollapse('blockEditor')} />
+              <div className="flex-1 overflow-y-auto">
+                <BlockEditor />
+              </div>
+            </div>
+          )}
+
+        </div>{/* end キャンバスエリア */}
 
         <ResizeDivider
           onDragStart={() => { previewStartRef.current = widths.preview }}
@@ -361,28 +406,6 @@ export default function EditorPage() {
               onPlay={handlePlay}
               onStop={handleStop}
             />
-          </div>
-        )}
-
-        <ResizeDivider
-          onDragStart={() => { blockEditorStartRef.current = widths.blockEditor }}
-          onResize={(delta) => {
-            if (collapsed.blockEditor) return
-            const containerW = containerRef.current?.clientWidth ?? 0
-            const maxBlockEditor = containerW - paletteWRef.current - previewWRef.current - CANVAS_MIN - DIVIDERS_W
-            setWidths((w) => ({ ...w, blockEditor: Math.max(PANEL_MIN, Math.min(maxBlockEditor, blockEditorStartRef.current - delta)) }))
-          }}
-        />
-
-        {/* ── ブロック設定 ── */}
-        {collapsed.blockEditor ? (
-          <CollapsedTab title="設定" onExpand={() => toggleCollapse('blockEditor')} />
-        ) : (
-          <div className="flex flex-col overflow-hidden flex-shrink-0" style={{ width: blockEditorW }}>
-            <PanelHeader title="ブロック設定" collapsed={false} onToggle={() => toggleCollapse('blockEditor')} />
-            <div className="flex-1 overflow-y-auto">
-              <BlockEditor />
-            </div>
           </div>
         )}
 

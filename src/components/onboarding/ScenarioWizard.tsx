@@ -190,7 +190,6 @@ export default function ScenarioWizard({ onComplete, onCancel }: Props) {
                   <div>
                     <p className="font-semibold text-gray-800">
                       デモシナリオを使う
-                      <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">8ブロック付き</span>
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">サンプルを編集してすぐに始められます</p>
                   </div>
