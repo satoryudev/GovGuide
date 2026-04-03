@@ -17,7 +17,15 @@ export function loadCustomDocTypes(): CustomDocType[] {
 
 export function saveCustomDocType(doc: CustomDocType): void {
   const list = loadCustomDocTypes().filter((d) => d.id !== doc.id)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...list, doc]))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...list, doc]))
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      alert('画像のサイズが大きすぎて保存できませんでした。より小さい画像を使用してください。')
+    } else {
+      throw e
+    }
+  }
 }
 
 export function deleteCustomDocType(id: string): void {
