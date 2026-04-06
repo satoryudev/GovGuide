@@ -15,13 +15,6 @@ interface PaletteItem {
 
 const PALETTE_ITEMS: PaletteItem[] = [
   {
-    type: 'start',
-    label: '開始ブロック',
-    description: 'チュートリアルの開始点',
-    color: 'border-green-300 bg-green-50 hover:bg-green-100',
-    emoji: '▶',
-  },
-  {
     type: 'end',
     label: '終了ブロック',
     description: 'チュートリアルの終了点',

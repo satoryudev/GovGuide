@@ -126,10 +126,13 @@ export default function EditorDndProvider({ children }: { children: React.ReactN
         : (() => { const i = currentBlocks.findIndex((b) => b.id === overId); return i === -1 ? currentBlocks.length : i })()
       addBlocksAt(newBlocks, insertIdx)
     } else {
-      // キャンバス内の並び替え
+      // キャンバス内の並び替え（start ブロックは移動不可）
       const blocks = scenario?.blocks ?? []
       const oldIdx = blocks.findIndex((b) => b.id === active.id)
       const newIdx = blocks.findIndex((b) => b.id === over.id)
+      const movingBlock = blocks[oldIdx]
+      if (movingBlock?.type === 'start') return
+      if (newIdx === 0 && blocks[0]?.type === 'start') return
       if (active.id !== over.id && oldIdx !== -1 && newIdx !== -1) {
         reorderBlocks(arrayMove(blocks, oldIdx, newIdx))
       }
