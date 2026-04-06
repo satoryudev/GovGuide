@@ -7,12 +7,12 @@ import { Block } from '@/types/scenario'
 import { useEditorStore } from '@/store/editorStore'
 
 export const TYPE_META: Record<Block['type'], { label: string; color: string; emoji: string }> = {
-  start: { label: '開始ブロック', color: 'border-l-green-500 bg-green-50', emoji: '▶' },
-  end: { label: '終了ブロック', color: 'border-l-gray-400 bg-gray-50', emoji: '⏹' },
-  speech: { label: '吹き出し', color: 'border-l-blue-400 bg-blue-50', emoji: '💬' },
-  spotlight: { label: 'スポットライト', color: 'border-l-amber-400 bg-amber-50', emoji: '🔦' },
-  'input-spotlight': { label: '入力スポットライト', color: 'border-l-indigo-400 bg-indigo-50', emoji: '✏️' },
-  branch: { label: '条件分岐', color: 'border-l-red-400 bg-red-50', emoji: '🔀' },
+  start: { label: '開始ブロック', color: 'border-l-green-500 bg-green-50 dark:bg-green-900/20', emoji: '▶' },
+  end: { label: '終了ブロック', color: 'border-l-gray-400 bg-gray-50 dark:bg-gray-800', emoji: '⏹' },
+  speech: { label: '吹き出し', color: 'border-l-blue-400 bg-blue-50 dark:bg-blue-900/20', emoji: '💬' },
+  spotlight: { label: 'スポットライト', color: 'border-l-amber-400 bg-amber-50 dark:bg-amber-900/20', emoji: '🔦' },
+  'input-spotlight': { label: '入力スポットライト', color: 'border-l-indigo-400 bg-indigo-50 dark:bg-indigo-900/20', emoji: '✏️' },
+  branch: { label: '条件分岐', color: 'border-l-red-400 bg-red-50 dark:bg-red-900/20', emoji: '🔀' },
 }
 
 export function getBlockSummary(block: Block): string {
@@ -34,7 +34,7 @@ interface Props {
 }
 
 export default function BlockItem({ block, index, disableDrag = false, isFixed = false }: Props) {
-  const meta = TYPE_META[block.type] ?? { label: block.type, color: 'border-l-gray-400 bg-gray-50', emoji: '?' }
+  const meta = TYPE_META[block.type] ?? { label: block.type, color: 'border-l-gray-400 bg-gray-50 dark:bg-gray-800', emoji: '?' }
   const { selectedBlockId, setSelectedBlockId, removeBlock, activeBlockId } = useEditorStore()
   const isSelected = selectedBlockId === block.id
   const isActive = activeBlockId === block.id
@@ -115,7 +115,7 @@ export default function BlockItem({ block, index, disableDrag = false, isFixed =
             ? 'ring-2 ring-red-500 ring-offset-1'
             : isSelected
               ? 'ring-2 ring-blue-500 ring-offset-1'
-              : 'hover:brightness-95'}
+              : 'hover:brightness-95 dark:hover:brightness-110'}
         transition-all
       `}
     >
@@ -124,13 +124,13 @@ export default function BlockItem({ block, index, disableDrag = false, isFixed =
         {/* 上段：ラベル ＋ ⋮ 設定ボタン */}
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-xs">{meta.emoji}</span>
-          <span className="text-xs font-semibold text-gray-600">{meta.label}</span>
-          <span className="text-xs text-gray-400 ml-auto mr-1">#{index + 1}</span>
+          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">{meta.label}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto mr-1">#{index + 1}</span>
           {!isFixed && (
             <button
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); setSelectedBlockId(block.id) }}
-              className="text-gray-400 hover:text-gray-700 transition-colors leading-none flex-shrink-0 px-0.5"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors leading-none flex-shrink-0 px-0.5"
               title="ブロック設定を開く"
             >
               ⋮
@@ -139,16 +139,16 @@ export default function BlockItem({ block, index, disableDrag = false, isFixed =
         </div>
 
         {/* サマリー */}
-        <p className="text-xs text-gray-700 truncate">{getBlockSummary(block)}</p>
+        <p className="text-xs text-gray-700 dark:text-gray-300 truncate">{getBlockSummary(block)}</p>
 
         {/* 下段：ブロックID ＋ 削除ボタン */}
         <div className="flex items-center mt-0.5">
-          <p className="text-xs text-gray-400 font-mono truncate flex-1">{block.id}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 font-mono truncate flex-1">{block.id}</p>
           {isDeletable && (
             <button
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); removeBlock(block.id) }}
-              className="text-gray-300 hover:text-red-500 transition-colors text-base leading-none flex-shrink-0 ml-1"
+              className="text-gray-300 dark:text-gray-600 hover:text-red-500 transition-colors text-base leading-none flex-shrink-0 ml-1"
               title="削除"
             >
               ×

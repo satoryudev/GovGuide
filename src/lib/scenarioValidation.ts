@@ -1,4 +1,5 @@
 import { Block, BranchBlock, InputSpotlightBlock, SpeechBlock } from '@/types/scenario'
+import { getBranchChain } from '@/lib/branchChain'
 
 export interface ValidationIssue {
   severity: 'error' | 'warning'
@@ -8,6 +9,7 @@ export interface ValidationIssue {
 
 export function validateScenario(blocks: Block[]): ValidationIssue[] {
   const issues: ValidationIssue[] = []
+  const blockIds = new Set(blocks.map((b) => b.id))
 
   // シナリオにEndブロックがない
   const hasEnd = blocks.some((b) => b.type === 'end')
@@ -41,6 +43,16 @@ export function validateScenario(blocks: Block[]): ValidationIssue[] {
         const hasEmptyLabel = b.options.some((opt) => !opt.label?.trim())
         if (hasEmptyLabel) {
           issues.push({ severity: 'warning', message: '条件分岐ブロックに空のラベルの選択肢があります', blockId: b.id })
+        }
+        for (const opt of b.options) {
+          const label = opt.label?.trim() || '（ラベルなし）'
+          if (!opt.nextId) {
+            issues.push({ severity: 'warning', message: `条件分岐の選択肢「${label}」の分岐先が未設定です`, blockId: b.id })
+          } else if (!blockIds.has(opt.nextId)) {
+            issues.push({ severity: 'warning', message: `条件分岐の選択肢「${label}」の分岐先ブロックが存在しません`, blockId: b.id })
+          } else if (getBranchChain(blocks, opt.nextId).length === 0) {
+            issues.push({ severity: 'warning', message: `条件分岐の選択肢「${label}」に処理がありません`, blockId: b.id })
+          }
         }
       }
     }

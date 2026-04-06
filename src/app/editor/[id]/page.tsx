@@ -20,6 +20,9 @@ import { getScenarioStatus, ScenarioStatus } from '@/lib/scenarioUtils'
 import { Scenario } from '@/types/scenario'
 import { findBranchStackForBlock } from '@/lib/branchChain'
 import ValidationBadge from '@/components/editor/ValidationBadge'
+import ValidationDialog from '@/components/editor/ValidationDialog'
+import { validateScenario, ValidationIssue } from '@/lib/scenarioValidation'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const PANEL_MIN = 160
 const COLLAPSED_W = 32
@@ -34,12 +37,12 @@ function PanelHeader({
   title, collapsed, onToggle,
 }: { title: string; collapsed: boolean; onToggle: () => void }) {
   return (
-    <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-200/70 flex-shrink-0">
-      {!collapsed && <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</span>}
+    <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-gray-800 border-b border-slate-200/70 dark:border-gray-700 flex-shrink-0">
+      {!collapsed && <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</span>}
       <button
         onClick={onToggle}
-        className="ml-auto text-slate-400 hover:text-slate-700 transition-colors w-5 h-5
-          flex items-center justify-center rounded hover:bg-slate-200 text-xs font-bold"
+        className="ml-auto text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors w-5 h-5
+          flex items-center justify-center rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold"
         title={collapsed ? '展開' : '最小化'}
       >
         {collapsed ? '▶' : '×'}
@@ -49,9 +52,9 @@ function PanelHeader({
 }
 
 const STATUS_CONFIG: Record<ScenarioStatus, { label: string; cls: string }> = {
-  not_started: { label: '未開始',  cls: 'bg-gray-100 text-gray-600' },
-  in_progress:  { label: '作成中',  cls: 'bg-blue-100 text-blue-700' },
-  completed:    { label: '完了 ✓', cls: 'bg-emerald-100 text-emerald-700' },
+  not_started: { label: '未開始',  cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' },
+  in_progress:  { label: '作成中',  cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+  completed:    { label: '完了 ✓', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
 }
 
 function StatusBadge({ scenario }: { scenario: Scenario }) {
@@ -67,12 +70,12 @@ function CollapsedTab({ title, onExpand }: { title: string; onExpand: () => void
     <div
       onClick={onExpand}
       className="flex flex-col items-center justify-center h-full cursor-pointer
-        bg-gray-50 hover:bg-gray-100 transition-colors gap-2 border-r border-gray-200"
+        bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors gap-2 border-r border-gray-200 dark:border-gray-700"
       style={{ width: COLLAPSED_W }}
     >
-      <span className="text-gray-400 text-xs font-bold">▶</span>
+      <span className="text-gray-400 dark:text-gray-500 text-xs font-bold">▶</span>
       <span
-        className="text-gray-500 text-xs font-semibold tracking-widest"
+        className="text-gray-500 dark:text-gray-400 text-xs font-semibold tracking-widest"
         style={{ writingMode: 'vertical-rl' }}
       >{title}</span>
     </div>
@@ -117,6 +120,7 @@ export default function EditorPage() {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const localBlobRef = useRef<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([])
   const [titleEditing, setTitleEditing] = useState(false)
   const [localBlobUrl, setLocalBlobUrl] = useState<string | null>(null)
   const [localFileName, setLocalFileName] = useState<string | null>(null)
@@ -283,6 +287,12 @@ export default function EditorPage() {
   }
 
   const handlePlay = () => {
+    const blocks = scenario?.blocks ?? []
+    const issues = validateScenario(blocks)
+    if (issues.length > 0) {
+      setValidationIssues(issues)
+      return
+    }
     const iframe = iframeRef.current
     if (!iframe) return
     iframe.src = getPreviewSrc()
@@ -311,19 +321,26 @@ export default function EditorPage() {
   blockEditorWRef.current = blockEditorW
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden bg-white dark:bg-gray-900">
+      {validationIssues.length > 0 && (
+        <ValidationDialog
+          issues={validationIssues}
+          onClose={() => setValidationIssues([])}
+          onJumpToBlock={(blockId) => setSelectedBlockId(blockId)}
+        />
+      )}
       {/* Top header — breadcrumb style */}
-      <header className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-200 flex-shrink-0 min-h-[48px]">
+      <header className="flex items-center justify-between px-4 py-2.5 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 min-h-[48px]">
         {/* Left: breadcrumb + title */}
         <div className="flex items-center gap-1.5 text-sm min-w-0">
-          <Link href="/" className="text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1 flex-shrink-0 text-xs">
+          <Link href="/" className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors flex items-center gap-1 flex-shrink-0 text-xs">
             ← ダッシュボード
           </Link>
-          <span className="text-gray-300 flex-shrink-0">/</span>
+          <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">/</span>
           {titleEditing ? (
             <input
               autoFocus
-              className="font-semibold text-sm border border-blue-400 rounded px-2 py-0.5 min-w-0"
+              className="font-semibold text-sm border border-blue-400 rounded px-2 py-0.5 min-w-0 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               value={scenario.title}
               onChange={(e) => updateScenarioMeta({ title: e.target.value })}
               onBlur={() => setTitleEditing(false)}
@@ -332,13 +349,13 @@ export default function EditorPage() {
           ) : (
             <button
               onClick={() => setTitleEditing(true)}
-              className="font-semibold text-sm text-gray-800 hover:text-blue-600 transition-colors truncate max-w-[200px]"
+              className="font-semibold text-sm text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate max-w-[200px]"
             >
               {scenario.title}
             </button>
           )}
           <select
-            className="text-xs border border-gray-200 rounded px-2 py-1 bg-white text-gray-600 flex-shrink-0 ml-1"
+            className="text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex-shrink-0 ml-1"
             value={scenario.category}
             onChange={(e) => updateScenarioMeta({ category: e.target.value as typeof scenario.category })}
           >
@@ -349,10 +366,11 @@ export default function EditorPage() {
           </select>
         </div>
 
-        {/* Right: status badge + validation */}
+        {/* Right: status badge + validation + theme toggle */}
         <div className="flex items-center gap-2 flex-shrink-0 ml-4">
           <ValidationBadge />
           <StatusBadge scenario={scenario} />
+          <ThemeToggle className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700" />
         </div>
       </header>
 

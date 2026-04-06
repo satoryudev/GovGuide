@@ -1,5 +1,7 @@
 'use client'
 
+import ThemeToggle from '@/components/ThemeToggle'
+
 const NAV_ITEMS = [
   { icon: '▤', label: 'ダッシュボード', active: true },
 ]
@@ -52,10 +54,11 @@ export default function DashboardSidebar() {
           <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
             G
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-medium text-slate-300 truncate">管理者</p>
             <p className="text-xs text-slate-500 truncate">シナリオ作成担当</p>
           </div>
+          <ThemeToggle className="text-slate-400 hover:text-slate-200 flex-shrink-0" />
         </div>
       </div>
     </nav>
