@@ -64,7 +64,7 @@ export default function Canvas() {
             {mainBlocks.map((block, i) => (
               <Fragment key={block.id}>
                 {overBlockId === block.id && <DropLine />}
-                <BlockItem block={block} index={scenario.blocks.indexOf(block)} />
+                <BlockItem block={block} index={scenario.blocks.indexOf(block)} disableDrag={block.type === 'start'} />
                 {block.type === 'branch' ? (
                   <BranchSplit
                     branch={block as BranchBlock}
