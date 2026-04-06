@@ -38,6 +38,13 @@ export default function EditorDndProvider({ children }: { children: React.ReactN
   const [activePaletteType, setActivePaletteType] = useState<BlockType | null>(null)
   const [overBlockId, setOverBlockId] = useState<string | null>(null)
 
+  // ブランチビュー内のチェーンに条件分岐ブロックが含まれるか判定
+  const branchChainHasBranch = branchView ? (() => {
+    const branch = scenario?.blocks.find((b) => b.id === branchView.branchId) as BranchBlock | undefined
+    const startId = branch?.options.find((o) => o.id === branchView.side)?.nextId ?? null
+    return getBranchChain(scenario?.blocks ?? [], startId).some(b => b.type === 'branch')
+  })() : false
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -51,16 +58,18 @@ export default function EditorDndProvider({ children }: { children: React.ReactN
 
   const handleDragOver = (e: DragOverEvent) => {
     if (e.active.data.current?.source === 'palette') {
+      // ブランチビューで分岐ブロックが含まれる場合はドロップ表示を抑制
+      if (branchChainHasBranch) return
       setOverBlockId((e.over?.id as string) ?? null)
     }
   }
 
-  const handleDragEnd = (e: DragEndEvent) => {
-    const { active, over } = e
-    setActivePaletteType(null)
-    setOverBlockId(null)
-
-    if (!over) return
+  // Issue #34: handleDragEnd をサブ関数に分割して可読性を向上
+  const handleBranchViewDrop = (
+    active: DragEndEvent['active'],
+    over: NonNullable<DragEndEvent['over']>,
+  ) => {
+    if (branchChainHasBranch) return
 
     // ── ブランチビュー内の操作 ──
     if (branchView) {
@@ -88,10 +97,13 @@ export default function EditorDndProvider({ children }: { children: React.ReactN
           reorderBranchChain(branchView.branchId, branchView.side, arrayMove(chainBlocks, oldIdx, newIdx))
         }
       }
-      return
     }
+  }
 
-    // ── メインキャンバスの操作 ──
+  const handleMainCanvasDrop = (
+    active: DragEndEvent['active'],
+    over: NonNullable<DragEndEvent['over']>,
+  ) => {
     if (active.data.current?.source === 'palette') {
       const blockType = active.data.current.blockType as BlockType
       const overId = over.id as string
@@ -121,6 +133,20 @@ export default function EditorDndProvider({ children }: { children: React.ReactN
       if (active.id !== over.id && oldIdx !== -1 && newIdx !== -1) {
         reorderBlocks(arrayMove(blocks, oldIdx, newIdx))
       }
+    }
+  }
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e
+    setActivePaletteType(null)
+    setOverBlockId(null)
+
+    if (!over) return
+
+    if (branchView) {
+      handleBranchViewDrop(active, over)
+    } else {
+      handleMainCanvasDrop(active, over)
     }
   }
 
