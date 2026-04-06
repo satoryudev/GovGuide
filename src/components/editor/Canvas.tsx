@@ -17,11 +17,11 @@ import { DragOverContext } from './EditorDndProvider'
 function BlockConnector({ fromBlock }: { fromBlock: Block }) {
   return (
     <div className="flex flex-col items-center select-none pointer-events-none">
-      <div className="w-px h-3 bg-gray-300" />
-      <svg width="10" height="6" viewBox="0 0 10 6" className="fill-gray-300">
+      <div className="w-px h-3 bg-gray-300 dark:bg-gray-600" />
+      <svg width="10" height="6" viewBox="0 0 10 6" className="fill-gray-300 dark:fill-gray-600">
         <path d="M5 6L0 0h10z" />
       </svg>
-      <div className="w-px h-3 bg-gray-300" />
+      <div className="w-px h-3 bg-gray-300 dark:bg-gray-600" />
     </div>
   )
 }
@@ -55,7 +55,7 @@ export default function Canvas() {
   const mainBlocks = scenario.blocks.filter((b) => !branchChildIds.has(b.id))
 
   return (
-    <div id="editor-canvas" ref={setNodeRef} className="flex-1 min-w-0 overflow-y-auto p-4">
+    <div id="editor-canvas" ref={setNodeRef} className="flex-1 min-w-0 overflow-y-auto p-4 bg-white dark:bg-gray-900">
       {scenario.blocks.length === 0 ? (
         <EmptyStatePrompt />
       ) : (

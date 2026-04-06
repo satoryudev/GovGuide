@@ -85,26 +85,26 @@ export default function HomePage() {
       <div className="px-8 py-6 space-y-6">
         {/* Progress overview card */}
         {scenarios.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-gray-700">全体の進捗</span>
-              <span className="text-sm text-gray-500">{completed} / {scenarios.length} 完了</span>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">全体の進捗</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">{completed} / {scenarios.length} 完了</span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
               <div
                 className="bg-emerald-500 h-2 rounded-full transition-all duration-700"
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <p className="text-xs text-gray-400 mt-1.5">{pct}% 完了</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">{pct}% 完了</p>
           </div>
         )}
 
         {/* Section header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-800">
+          <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">
             シナリオ一覧
-            <span className="ml-2 text-sm font-normal text-gray-400">({scenarios.length}件)</span>
+            <span className="ml-2 text-sm font-normal text-gray-400 dark:text-gray-500">({scenarios.length}件)</span>
           </h2>
           <button
             onClick={openWizard}
@@ -117,9 +117,9 @@ export default function HomePage() {
 
         {/* Scenario task cards */}
         {scenarios.length === 0 && hasVisited ? (
-          <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+          <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
             <div className="text-5xl mb-4">📭</div>
-            <p className="text-gray-500 mb-5">シナリオがまだありません。最初のシナリオを作ってみましょう！</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-5">シナリオがまだありません。最初のシナリオを作ってみましょう！</p>
             <button
               onClick={openWizard}
               className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition-colors"

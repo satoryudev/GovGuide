@@ -212,9 +212,9 @@ function StartBlockEditor({ block }: { block: StartBlock }) {
   const { updateBlock } = useEditorStore()
   return (
     <div className="space-y-3">
-      <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-center">
+      <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 text-center">
         <div className="text-2xl mb-1">▶</div>
-        <p className="text-xs font-semibold text-green-800">チュートリアルはここから始まります</p>
+        <p className="text-xs font-semibold text-green-800 dark:text-green-300">チュートリアルはここから始まります</p>
       </div>
       <div>
         <label className="label">セリフ（省略可）</label>
@@ -245,9 +245,9 @@ function EndBlockEditor({ block }: { block: EndBlock }) {
   const { updateBlock } = useEditorStore()
   return (
     <div className="space-y-3">
-      <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-center">
+      <div className="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 text-center">
         <div className="text-2xl mb-1">⏹</div>
-        <p className="text-xs font-semibold text-gray-700">チュートリアルはここで終了します</p>
+        <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">チュートリアルはここで終了します</p>
       </div>
       <div>
         <label className="label">セリフ（省略可）</label>
@@ -347,12 +347,12 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
       {/* 対象種別切り替え */}
       <div>
         <label className="label">強調方法</label>
-        <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
           <button
             type="button"
             onClick={() => setTargetType('input')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-              !isButton && !isElement ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              !isButton && !isElement ? 'bg-white dark:bg-gray-600 text-indigo-700 dark:text-indigo-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             ✏️ 入力フォーム
@@ -361,7 +361,7 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
             type="button"
             onClick={() => setTargetType('button')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-              isButton ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              isButton ? 'bg-white dark:bg-gray-600 text-amber-700 dark:text-amber-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             🔦 ボタン
@@ -370,7 +370,7 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
             type="button"
             onClick={() => setTargetType('element')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-              isElement ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              isElement ? 'bg-white dark:bg-gray-600 text-emerald-700 dark:text-emerald-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             📌 エリア
@@ -413,13 +413,13 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
 
       {/* バリデーション設定（入力フォームのみ） */}
       {!isButton && !isElement && (
-        <div className="border-t border-gray-100 pt-3">
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input type="checkbox" checked={validationEnabled} onChange={(e) => toggleValidation(e.target.checked)} className="w-4 h-4 accent-blue-500" />
-            <span className="text-xs font-semibold text-gray-600">バリデーションを有効にする</span>
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">バリデーションを有効にする</span>
           </label>
           {validationEnabled && (
-            <div className="mt-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
+            <div className="mt-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3">
               <ValidationPatternSelector
                 pattern={block.validationPattern ?? ''}
                 errorMessage={block.errorMessage ?? ''}
@@ -434,10 +434,10 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
       <div className="border-t border-gray-100 pt-3">
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <input type="checkbox" checked={previewEnabled} onChange={(e) => togglePreview(e.target.checked)} className="w-4 h-4 accent-teal-500" />
-          <span className="text-xs font-semibold text-gray-600">書類プレビューを追加する</span>
+          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">書類プレビューを追加する</span>
         </label>
         {previewEnabled && (
-          <div className="mt-3 rounded-lg bg-teal-50 border border-teal-200 p-3">
+          <div className="mt-3 rounded-lg bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 p-3">
             <DocTypeSelector
               value={block.documentType ?? 'mynumber-card'}
               onChange={(v) => updateBlock({ ...block, documentType: v })}
@@ -546,9 +546,9 @@ function DocTypeSelector({
         <div className="space-y-1">
           <p className="text-xs text-gray-400">カスタム書類</p>
           {customTypes.map((c) => (
-            <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded bg-gray-50 border border-gray-100">
+            <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600">
               <img src={c.imageBase64} alt={c.label} className="w-8 h-8 object-cover rounded" />
-              <span className="text-xs text-gray-700 flex-1 truncate">{c.label}</span>
+              <span className="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{c.label}</span>
               <button onClick={() => handleDelete(c.id)} className="text-gray-300 hover:text-red-500 transition-colors text-base leading-none" title="削除">×</button>
             </div>
           ))}
@@ -613,7 +613,7 @@ function BranchEditor({ block }: { block: BranchBlock }) {
         </div>
         <div className="space-y-2">
           {block.options.map((opt) => (
-            <div key={opt.id} className="rounded-lg border border-gray-200 p-2 space-y-1.5">
+            <div key={opt.id} className="rounded-lg border border-gray-200 dark:border-gray-600 p-2 space-y-1.5">
               <div className="flex items-center gap-2">
                 <input
                   className="input flex-1 py-1 text-sm"
@@ -662,8 +662,8 @@ export default function BlockEditor() {
 
   if (!block) {
     return (
-      <div className="bg-white flex items-center justify-center h-full w-full">
-        <p className="text-sm text-gray-400 text-center px-4">
+      <div className="bg-white dark:bg-gray-900 flex items-center justify-center h-full w-full">
+        <p className="text-sm text-gray-400 dark:text-gray-500 text-center px-4">
           ブロックを選択すると<br />設定フォームが表示されます
         </p>
       </div>
@@ -671,9 +671,9 @@ export default function BlockEditor() {
   }
 
   return (
-    <div id="block-editor" className="bg-white flex flex-col h-full w-full">
-      <div className="px-3 py-2 border-b border-gray-100">
-        <p className="text-xs text-gray-400 font-mono truncate">{block.id}</p>
+    <div id="block-editor" className="bg-white dark:bg-gray-900 flex flex-col h-full w-full">
+      <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+        <p className="text-xs text-gray-400 dark:text-gray-500 font-mono truncate">{block.id}</p>
       </div>
       <div className="p-3 flex-1 overflow-y-auto">
         {block.type === 'start' && <StartBlockEditor block={block} />}

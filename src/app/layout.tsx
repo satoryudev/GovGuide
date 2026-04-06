@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import ThemeProvider from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'GovGuide',
@@ -13,7 +14,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body className="text-gray-900 min-h-screen">{children}</body>
+      <head>
+        {/* ダークモードのフラッシュを防ぐ inline script */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();` }} />
+      </head>
+      <body className="text-gray-900 dark:text-gray-100 min-h-screen">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   )
 }

@@ -24,13 +24,13 @@ export default function BranchSplit({ branch, hasNextBlock = false, onNavigate, 
     <div className="mt-1">
       {/* ── 分岐コネクター（ブランチブロック → Nカラム） ── */}
       <div className="flex justify-center">
-        <div className="w-px h-3 bg-gray-300" />
+        <div className="w-px h-3 bg-gray-300 dark:bg-gray-600" />
       </div>
       <div className="relative flex items-start">
         {/* 横線（分岐の入口） */}
         {n > 1 && (
           <div
-            className="absolute top-0 h-px bg-gray-300"
+            className="absolute top-0 h-px bg-gray-300 dark:bg-gray-600"
             style={{
               left: `${((0.5 / n) * 100).toFixed(1)}%`,
               right: `${((0.5 / n) * 100).toFixed(1)}%`,
@@ -43,7 +43,7 @@ export default function BranchSplit({ branch, hasNextBlock = false, onNavigate, 
           const cls = BRANCH_OPTION_COLOR_CLASSES[opt.color]
           return (
             <div key={opt.id} className="flex-1 flex flex-col items-center px-1">
-              <div className="w-px h-3 bg-gray-300" />
+              <div className="w-px h-3 bg-gray-300 dark:bg-gray-600" />
               <button
                 data-branch-navigate="true"
                 onPointerDown={(e) => e.stopPropagation()}
@@ -65,20 +65,20 @@ export default function BranchSplit({ branch, hasNextBlock = false, onNavigate, 
               const x = `${(((i + 0.5) / n) * 100).toFixed(1)}%`
               return (
                 <Fragment key={i}>
-                  <line x1={x} y1="0"  x2={x}    y2="12" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1={x} y1="12" x2="50%"  y2="12" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1={x} y1="0"  x2={x}    y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-gray-300 dark:text-gray-600" />
+                  <line x1={x} y1="12" x2="50%"  y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-gray-300 dark:text-gray-600" />
                 </Fragment>
               )
             })}
-            <line x1="50%" y1="12" x2="50%" y2="24" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="50%" y1="12" x2="50%" y2="24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-gray-300 dark:text-gray-600" />
           </svg>
           <div className="flex justify-center -mt-px">
-            <svg width="10" height="6" viewBox="0 0 10 6" className="fill-gray-300">
+            <svg width="10" height="6" viewBox="0 0 10 6" className="fill-gray-300 dark:fill-gray-600">
               <path d="M5 6L0 0h10z" />
             </svg>
           </div>
           <div className="flex justify-center mt-0.5">
-            <div className="w-px h-2 bg-gray-300" />
+            <div className="w-px h-2 bg-gray-300 dark:bg-gray-600" />
           </div>
         </div>
       ) : (
@@ -89,17 +89,17 @@ export default function BranchSplit({ branch, hasNextBlock = false, onNavigate, 
               const x = `${(((i + 0.5) / n) * 100).toFixed(1)}%`
               return (
                 <Fragment key={i}>
-                  <line x1={x} y1="0"  x2={x}    y2="8"  stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1={x} y1="8"  x2="50%"  y2="8"  stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1={x} y1="0"  x2={x}    y2="8"  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-gray-300 dark:text-gray-600" />
+                  <line x1={x} y1="8"  x2="50%"  y2="8"  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-gray-300 dark:text-gray-600" />
                 </Fragment>
               )
             })}
-            <line x1="50%" y1="8" x2="50%" y2="16" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="50%" y1="8" x2="50%" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-gray-300 dark:text-gray-600" />
           </svg>
           {!hideMergeHint && (
             <>
-              <span className="text-[9px] text-gray-400 font-medium tracking-wide mt-0.5">合流 ↓</span>
-              <div className="mt-1 px-3 py-1 rounded border border-dashed border-gray-300 text-[9px] text-gray-400">
+              <span className="text-[9px] text-gray-400 dark:text-gray-500 font-medium tracking-wide mt-0.5">合流 ↓</span>
+              <div className="mt-1 px-3 py-1 rounded border border-dashed border-gray-300 dark:border-gray-600 text-[9px] text-gray-400 dark:text-gray-500">
                 共通処理はここにブロックを追加
               </div>
             </>
