@@ -195,15 +195,6 @@ function startPickMode(): void {
     const selector = getCssSelector(el)
     const id = (el as HTMLElement).id ?? ''
 
-    if (!id) {
-      tip.textContent = '⚠ IDなし — id属性を持つ要素を選択してください'
-      tip.style.background = '#ef4444'
-      tip.style.left = `${Math.min(e.clientX + 12, window.innerWidth - 220)}px`
-      tip.style.top = `${e.clientY + 16}px`
-      tip.style.display = 'block'
-      return
-    }
-
     window.parent.postMessage({ type: 'TETSUZUKI_QUEST_ELEMENT_PICKED', selector, id }, '*')
     stopPickMode()
   }
