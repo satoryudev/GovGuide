@@ -30,8 +30,8 @@ export interface InputSpotlightBlock {
   targetId: string
   targetLabel: string
   nextId: string | null
-  /** 対象要素の種別: 'input'（入力フォーム強調）| 'button'（スポットライト強調）。省略時は 'input' */
-  targetType?: 'input' | 'button'
+  /** 対象要素の種別: 'input'（入力フォーム強調）| 'button'（スポットライト強調）| 'element'（汎用要素強調）。省略時は 'input' */
+  targetType?: 'input' | 'button' | 'element'
   validationPattern?: string
   errorMessage?: string
   /** 書類プレビュー設定（省略時はプレビューなし） */
@@ -51,12 +51,19 @@ export interface DocumentPreviewBlock {
   nextId: string | null
 }
 
+export interface BranchOption {
+  id: string
+  label: string
+  color: string
+  nextId: string | null
+}
+
 export interface BranchBlock {
   id: string
   type: 'branch'
   question: string
-  yesNextId: string | null
-  noNextId: string | null
+  options: BranchOption[]
+  nextId: string | null
 }
 
 export type Block =

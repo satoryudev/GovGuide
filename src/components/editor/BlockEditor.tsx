@@ -9,6 +9,8 @@ import {
   SpeechBlock,
   InputSpotlightBlock,
   BranchBlock,
+  BranchOptionColor,
+  BRANCH_OPTION_COLOR_CLASSES,
 } from '@/types/scenario'
 import {
   loadCustomDocTypes,
@@ -146,12 +148,14 @@ function PickOnlyInput({
   blockId,
   field,
   hint,
+  withHash = false,
 }: {
   value: string
   onChange: (v: string) => void
   blockId: string
   field: string
   hint?: string
+  withHash?: boolean
 }) {
   const { startPick, pickRequest } = useEditorStore()
   const isPicking = pickRequest?.blockId === blockId && pickRequest?.field === field
@@ -160,7 +164,7 @@ function PickOnlyInput({
       <button
         type="button"
         title="プレビューで要素をクリックして選択"
-        onClick={() => startPick({ blockId, field, withHash: false })}
+        onClick={() => startPick({ blockId, field, withHash })}
         className={`px-2 py-1 rounded border text-sm transition-colors ${
           isPicking
             ? 'bg-amber-400 border-amber-400 text-white'
@@ -183,6 +187,7 @@ const TYPE_EMOJI: Record<Block['type'], string> = {
   start: '▶',
   end: '⏹',
   speech: '💬',
+  spotlight: '🔦',
   'input-spotlight': '✏️',
   branch: '🔀',
 }
@@ -193,6 +198,7 @@ function blockLabel(b: Block): string {
     case 'start': return `${emoji} 開始ブロック`
     case 'end': return `${emoji} 終了ブロック`
     case 'speech': return `${emoji} ${b.message.slice(0, 20)}`
+    case 'spotlight': return `${emoji} ${b.targetLabel}`
     case 'input-spotlight': return `${emoji} ${b.targetLabel}`
     case 'branch': return `${emoji} ${b.question.slice(0, 20)}`
   }
@@ -304,14 +310,15 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
   const { updateBlock } = useEditorStore()
   const targetType = block.targetType ?? 'input'
   const isButton = targetType === 'button'
+  const isElement = targetType === 'element'
   const validationEnabled = block.validationPattern !== undefined
   const previewEnabled = block.documentType !== undefined
 
-  const setTargetType = (t: 'input' | 'button') => {
-    // ボタンモードに切り替え時はバリデーション設定を削除
-    if (t === 'button') {
+  const setTargetType = (t: 'input' | 'button' | 'element') => {
+    // input以外のモードに切り替え時はバリデーション設定を削除
+    if (t === 'button' || t === 'element') {
       const { validationPattern: _, errorMessage: __, ...rest } = block
-      updateBlock({ ...rest, targetType: 'button' } as InputSpotlightBlock)
+      updateBlock({ ...rest, targetType: t } as InputSpotlightBlock)
     } else {
       updateBlock({ ...block, targetType: 'input' })
     }
@@ -345,7 +352,7 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
             type="button"
             onClick={() => setTargetType('input')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-              !isButton ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              !isButton && !isElement ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             ✏️ 入力フォーム
@@ -359,9 +366,18 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
           >
             🔦 ボタン
           </button>
+          <button
+            type="button"
+            onClick={() => setTargetType('element')}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+              isElement ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            📌 エリア
+          </button>
         </div>
         <p className="mt-1 text-[11px] text-gray-400">
-          {isButton ? 'パルスリング強調＋クリックで次へ進みます' : 'フォーカス強調＋入力確認後に次へ進みます'}
+          {isButton ? 'パルスリング強調＋クリックで次へ進みます' : isElement ? 'パルスリング強調＋「次へ」ボタンで進みます' : 'フォーカス強調＋入力確認後に次へ進みます'}
         </p>
       </div>
 
@@ -371,7 +387,7 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
           className="input min-h-[60px] resize-y"
           value={block.message}
           onChange={(e) => updateBlock({ ...block, message: e.target.value })}
-          placeholder={isButton ? '例：「申請する」ボタンをクリックしてください。' : '例：郵便番号を入力してください。'}
+          placeholder={isButton ? '例：「申請する」ボタンをクリックしてください。' : isElement ? '例：こちらの枠が申請フォームです。' : '例：郵便番号を入力してください。'}
         />
       </div>
       <div>
@@ -381,7 +397,8 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
           onChange={(v) => updateBlock({ ...block, targetId: v })}
           blockId={block.id}
           field="targetId"
-          hint={isButton ? 'プレビューでボタンをクリック' : 'プレビューで input をクリック'}
+          hint={isButton ? 'プレビューでボタンをクリック' : isElement ? 'プレビューで強調したい領域をクリック' : 'プレビューで input をクリック'}
+          withHash={isElement}
         />
       </div>
       <div>
@@ -390,12 +407,12 @@ function InputSpotlightEditor({ block }: { block: InputSpotlightBlock }) {
           className="input"
           value={block.targetLabel}
           onChange={(e) => updateBlock({ ...block, targetLabel: e.target.value })}
-          placeholder={isButton ? '例：申請するボタン' : '例：郵便番号入力欄'}
+          placeholder={isButton ? '例：申請するボタン' : isElement ? '例：申請フォームの枠' : '例：郵便番号入力欄'}
         />
       </div>
 
       {/* バリデーション設定（入力フォームのみ） */}
-      {!isButton && (
+      {!isButton && !isElement && (
         <div className="border-t border-gray-100 pt-3">
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input type="checkbox" checked={validationEnabled} onChange={(e) => toggleValidation(e.target.checked)} className="w-4 h-4 accent-blue-500" />
@@ -546,28 +563,94 @@ function DocTypeSelector({
   )
 }
 
+const OPTION_DEFAULT_COLORS: BranchOptionColor[] = [
+  'orange', 'amber', 'yellow', 'lime', 'cyan', 'indigo', 'purple', 'pink', 'white',
+]
+
 function BranchEditor({ block }: { block: BranchBlock }) {
-  const { updateBlock, scenario } = useEditorStore()
-  const blocks = scenario?.blocks ?? []
+  const { updateBlock, addBranchOption, removeBranchOption } = useEditorStore()
+
+  const handleLabelChange = (optionId: string, label: string) => {
+    updateBlock({ ...block, options: block.options.map((o) => o.id === optionId ? { ...o, label } : o) })
+  }
+
+  const handleColorChange = (optionId: string, color: BranchOptionColor) => {
+    updateBlock({ ...block, options: block.options.map((o) => o.id === optionId ? { ...o, color } : o) })
+  }
+
+  const handleAddOption = () => {
+    if (block.options.length >= 5) return
+    const usedColors = new Set(block.options.map((o) => o.color))
+    const color = OPTION_DEFAULT_COLORS.find((c) => !usedColors.has(c)) ?? 'blue'
+    const id = `opt-${Math.random().toString(36).slice(2, 7)}`
+    addBranchOption(block.id, { id, label: `選択肢${block.options.length + 1}`, color, nextId: null })
+  }
+
   return (
     <div className="space-y-3">
       <div>
         <label className="label">質問文</label>
-        <textarea className="input min-h-[60px] resize-y" value={block.question} onChange={(e) => updateBlock({ ...block, question: e.target.value })} placeholder="例：同じ市区町村内への引越しですか？" />
+        <textarea
+          className="input min-h-[60px] resize-y"
+          value={block.question}
+          onChange={(e) => updateBlock({ ...block, question: e.target.value })}
+          placeholder="例：同じ市区町村内への引越しですか？"
+        />
       </div>
+
       <div>
-        <label className="label">はい → 次のブロック</label>
-        <select className="input" value={block.yesNextId ?? ''} onChange={(e) => updateBlock({ ...block, yesNextId: e.target.value || null })}>
-          <option value="">（終了）</option>
-          {nextOptions(blocks, block.id).map((b) => <option key={b.id} value={b.id}>{blockLabel(b)}</option>)}
-        </select>
-      </div>
-      <div>
-        <label className="label">いいえ → 次のブロック</label>
-        <select className="input" value={block.noNextId ?? ''} onChange={(e) => updateBlock({ ...block, noNextId: e.target.value || null })}>
-          <option value="">（終了）</option>
-          {nextOptions(blocks, block.id).map((b) => <option key={b.id} value={b.id}>{blockLabel(b)}</option>)}
-        </select>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="label mb-0">選択肢（{block.options.length}/5）</label>
+          {block.options.length < 5 && (
+            <button
+              type="button"
+              onClick={handleAddOption}
+              className="text-[11px] text-blue-500 hover:text-blue-700 font-semibold transition-colors"
+            >
+              ＋ 追加
+            </button>
+          )}
+        </div>
+        <div className="space-y-2">
+          {block.options.map((opt) => (
+            <div key={opt.id} className="rounded-lg border border-gray-200 p-2 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <input
+                  className="input flex-1 py-1 text-sm"
+                  value={opt.label}
+                  onChange={(e) => handleLabelChange(opt.id, e.target.value)}
+                  placeholder="選択肢名"
+                />
+                {block.options.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => removeBranchOption(block.id, opt.id)}
+                    className="text-gray-300 hover:text-red-500 transition-colors text-lg leading-none flex-shrink-0"
+                    title="削除"
+                  >×</button>
+                )}
+              </div>
+              {/* 12色カラーピッカー */}
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {(Object.keys(BRANCH_OPTION_COLOR_CLASSES) as BranchOptionColor[]).map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => handleColorChange(opt.id, color)}
+                    title={BRANCH_OPTION_COLOR_CLASSES[color].label}
+                    className={`w-5 h-5 rounded-full transition-all flex-shrink-0 ${
+                      color === 'white' ? 'bg-white border border-gray-300' : BRANCH_OPTION_COLOR_CLASSES[color].swatch
+                    } ${
+                      opt.color === color
+                        ? 'ring-2 ring-offset-1 ring-gray-500 scale-110'
+                        : 'hover:ring-1 hover:ring-offset-1 hover:ring-gray-400'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
