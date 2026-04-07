@@ -35,6 +35,22 @@ function downloadBlob(content: string, filename: string): void {
   URL.revokeObjectURL(url)
 }
 
+/** showSaveFilePicker 対応ブラウザはダイアログ経由で保存、非対応はBlobダウンロード */
+async function saveHtml(content: string, suggestedName: string): Promise<void> {
+  if (typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handle = await (window as any).showSaveFilePicker({
+      suggestedName,
+      types: [{ description: 'HTMLファイル', accept: { 'text/html': ['.html', '.htm'] } }],
+    })
+    const writable = await handle.createWritable()
+    await writable.write(new Blob([content], { type: 'text/html' }))
+    await writable.close()
+  } else {
+    downloadBlob(content, suggestedName)
+  }
+}
+
 /** HTML 文字列にチュートリアルブロックを注入して返す */
 function injectBlock(content: string, block: string): string {
   const markerStartEsc = MARKER_START.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -132,7 +148,7 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
         const file = await fileHandle.getFile()
         const content = injectBlock(await file.text(), block)
         const suggestedName = file.name.replace(/\.html?$/i, '') + '-tutorial.html'
-        downloadBlob(content, suggestedName)
+        await saveHtml(content, suggestedName)
         onExportCallback?.()
       } else {
         fallbackFileRef.current?.click()
@@ -158,7 +174,7 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
     const block = buildEmbedBlock(embedJs, json)
     const content = injectBlock(await file.text(), block)
     const suggestedName = file.name.replace(/\.html?$/i, '') + '-tutorial.html'
-    downloadBlob(content, suggestedName)
+    await saveHtml(content, suggestedName)
     onExportCallback?.()
   }
 
