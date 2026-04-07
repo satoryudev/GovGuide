@@ -177,7 +177,7 @@ function startPickMode(): void {
     tip.style.top = `${e.clientY + 16}px`
   }
 
-  const onClick = (e: MouseEvent) => {
+  const onPick = (e: MouseEvent) => {
     e.preventDefault()
     e.stopImmediatePropagation()
     let el = document.elementFromPoint(e.clientX, e.clientY)
@@ -200,12 +200,13 @@ function startPickMode(): void {
   }
 
   document.addEventListener('mousemove', onMove, true)
-  document.addEventListener('click', onClick, true)
+  // disabled ボタンは click が発火しないため mousedown で拾う
+  document.addEventListener('mousedown', onPick, true)
   document.body.style.cursor = 'crosshair'
 
   pickCleanup = () => {
     document.removeEventListener('mousemove', onMove, true)
-    document.removeEventListener('click', onClick, true)
+    document.removeEventListener('mousedown', onPick, true)
     document.body.style.cursor = ''
     highlight.remove()
     tip.remove()
