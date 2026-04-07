@@ -164,7 +164,7 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
 
   return (
     <>
-      <div id="preview-toolbar" className="bg-white border-b border-gray-200 flex-shrink-0 px-3 py-1.5">
+      <div id="preview-toolbar" className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 px-3 py-1.5">
         {/* 隠しファイル入力（フォールバック用） */}
         <input
           ref={fallbackFileRef}
@@ -185,30 +185,30 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleOpenEmbedModal}
-            className="text-xs px-2.5 py-1.5 rounded border border-blue-300 text-blue-600
-              hover:bg-blue-50 transition-colors whitespace-nowrap"
+            className="text-xs px-2.5 py-1.5 rounded border border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400
+              hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors whitespace-nowrap"
           >
             📋 埋め込みコード
           </button>
           <button
             onClick={handleExportHtml}
             disabled={exporting}
-            className="text-xs px-2.5 py-1.5 rounded border border-emerald-400 text-emerald-700
-              hover:bg-emerald-50 transition-colors whitespace-nowrap disabled:opacity-50"
+            className="text-xs px-2.5 py-1.5 rounded border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400
+              hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors whitespace-nowrap disabled:opacity-50"
           >
             {exporting ? '書き出し中…' : '💾 HTMLに書き出し'}
           </button>
           <button
             onClick={handleJsonExport}
-            className="text-xs px-2.5 py-1.5 rounded border border-gray-300 text-gray-600
-              hover:bg-gray-50 transition-colors whitespace-nowrap"
+            className="text-xs px-2.5 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400
+              hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap"
           >
             保存
           </button>
           <button
             onClick={() => jsonImportRef.current?.click()}
-            className="text-xs px-2.5 py-1.5 rounded border border-gray-300 text-gray-600
-              hover:bg-gray-50 transition-colors whitespace-nowrap"
+            className="text-xs px-2.5 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400
+              hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap"
           >
             インポート
           </button>
@@ -221,20 +221,20 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           onClick={(e) => { if (e.target === e.currentTarget) setEmbedModalOpen(false) }}
         >
-          <div className="bg-white rounded-xl shadow-2xl flex flex-col"
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl flex flex-col"
             style={{ width: 'min(680px, 95vw)', maxHeight: '85vh' }}
           >
             {/* ヘッダー */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
               <div>
-                <h3 className="font-semibold text-gray-800">埋め込みコード</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  以下のコードを対象HTMLの <code className="bg-gray-100 px-1 rounded">&lt;/body&gt;</code> 直前に貼り付けてください
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100">埋め込みコード</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  以下のコードを対象HTMLの <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">&lt;/body&gt;</code> 直前に貼り付けてください
                 </p>
               </div>
               <button
                 onClick={() => setEmbedModalOpen(false)}
-                className="text-gray-400 hover:text-gray-700 transition-colors text-xl leading-none ml-4"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors text-xl leading-none ml-4"
               >
                 ×
               </button>
@@ -245,16 +245,16 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
               <textarea
                 readOnly
                 value={embedCode}
-                className="w-full h-full font-mono text-[11px] bg-gray-50 border border-gray-200
-                  rounded-lg p-3 resize-none focus:outline-none text-gray-700"
+                className="w-full h-full font-mono text-[11px] bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600
+                  rounded-lg p-3 resize-none focus:outline-none text-gray-700 dark:text-gray-300"
                 style={{ minHeight: '240px' }}
                 onClick={(e) => (e.target as HTMLTextAreaElement).select()}
               />
             </div>
 
             {/* フッター */}
-            <div className="px-5 py-3 border-t border-gray-200 flex items-center justify-between flex-shrink-0">
-              <span className="text-xs text-gray-400">
+            <div className="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+              <span className="text-xs text-gray-400 dark:text-gray-500">
                 クリックで全選択 / コピーボタンでクリップボードにコピー
               </span>
               <div className="flex gap-2">
@@ -270,7 +270,7 @@ export default function PreviewToolbar({ onExportCallback }: Props) {
                 </button>
                 <button
                   onClick={() => setEmbedModalOpen(false)}
-                  className="text-xs px-4 py-1.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-50"
+                  className="text-xs px-4 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   閉じる
                 </button>

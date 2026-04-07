@@ -150,7 +150,7 @@ export function loadScenarios(): Scenario[] {
       return true
     }) as Scenario[]
 
-    if (valid.length === 0) return [DEMO_SCENARIO]
+    if (valid.length === 0) return []
 
     // validationブロック型の移行
     const hasValidation = valid.some((s) => s.blocks.some((b) => (b.type as string) === 'validation'))
