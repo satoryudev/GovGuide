@@ -316,11 +316,16 @@ function handleButtonSpotlight(block: InputSpotlightBlock, onNext: () => void): 
   target.style.position = target.style.position || 'relative'
   target.style.zIndex = '99999'
 
+  // disabled ボタンはクリックイベントが発火しないため一時的に解除する
+  const wasDisabled = (target as HTMLButtonElement).disabled
+  if (wasDisabled) (target as HTMLButtonElement).disabled = false
+
   const cleanup = () => {
     window.removeEventListener('resize', drawButtonSpotlight)
     target.style.pointerEvents = origPointerEvents
     target.style.position = origPosition
     target.style.zIndex = origZIndex
+    if (wasDisabled) (target as HTMLButtonElement).disabled = true
     document.getElementById(OVERLAY_ID)?.remove()
     document.getElementById(RING_ID)?.remove()
     unlockScroll()
