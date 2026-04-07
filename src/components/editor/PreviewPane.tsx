@@ -87,7 +87,7 @@ const PreviewPane = forwardRef<HTMLIFrameElement, Props>(
           </button>
         </div>
 
-        <iframe ref={ref} src={src} className="flex-1 w-full border-none" title="プレビュー" />
+        <iframe ref={ref} src={src} className="flex-1 w-full border-none dark:brightness-75" title="プレビュー" />
       </div>
     )
   }
