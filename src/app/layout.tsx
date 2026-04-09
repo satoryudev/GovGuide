@@ -3,7 +3,7 @@ import './globals.css'
 import ThemeProvider from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
-  title: 'GovGuide',
+  title: 'Tebiki Chart',
   description: '行政手続きチュートリアルシナリオエディタ',
 }
 

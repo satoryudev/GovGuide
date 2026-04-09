@@ -11,7 +11,7 @@ export default function EmptyStatePrompt() {
   }, []);
 
   const handleClick = () => {
-    document.dispatchEvent(new CustomEvent('govguide:focus-palette'));
+    document.dispatchEvent(new CustomEvent('tebiki-chart:focus-palette'));
   };
 
   return (

@@ -227,21 +227,21 @@ export default function EditorPage() {
 
   useEffect(() => {
     if (!pickRequest) return
-    iframeRef.current?.contentWindow?.postMessage({ type: 'TETSUZUKI_QUEST_PICK_START' }, '*')
+    iframeRef.current?.contentWindow?.postMessage({ type: 'TEBIKI_CHART_PICK_START' }, '*')
   }, [pickRequest])
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
-      if (e.data?.type === 'TETSUZUKI_QUEST_FINISHED') {
+      if (e.data?.type === 'TEBIKI_CHART_FINISHED') {
         setIsPlaying(false)
         setActiveBlockId(null)
         return
       }
-      if (e.data?.type === 'TETSUZUKI_QUEST_BLOCK_ACTIVE') {
+      if (e.data?.type === 'TEBIKI_CHART_BLOCK_ACTIVE') {
         setActiveBlockId(e.data.blockId ?? null)
         return
       }
-      if (e.data?.type !== 'TETSUZUKI_QUEST_ELEMENT_PICKED') return
+      if (e.data?.type !== 'TEBIKI_CHART_ELEMENT_PICKED') return
       const { selector, id: elemId } = e.data as { selector: string; id: string }
       if (!pickRequest) return
       applyPick(pickRequest.withHash ? selector : elemId)
@@ -253,7 +253,7 @@ export default function EditorPage() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && pickRequest) {
-        iframeRef.current?.contentWindow?.postMessage({ type: 'TETSUZUKI_QUEST_PICK_CANCEL' }, '*')
+        iframeRef.current?.contentWindow?.postMessage({ type: 'TEBIKI_CHART_PICK_CANCEL' }, '*')
         cancelPick()
       }
     }
@@ -298,7 +298,7 @@ export default function EditorPage() {
     iframe.src = getPreviewSrc()
     iframe.onload = () => {
       iframe.onload = null
-      iframe.contentWindow?.postMessage({ type: 'TETSUZUKI_QUEST_START', scenario }, '*')
+      iframe.contentWindow?.postMessage({ type: 'TEBIKI_CHART_START', scenario }, '*')
       setIsPlaying(true)
     }
   }
@@ -453,7 +453,7 @@ export default function EditorPage() {
                 bg-amber-400 text-amber-900 text-xs font-semibold px-3 py-1.5">
                 <span>🎯 要素をクリックして選択 — ESC でキャンセル</span>
                 <button onClick={() => {
-                  iframeRef.current?.contentWindow?.postMessage({ type: 'TETSUZUKI_QUEST_PICK_CANCEL' }, '*')
+                  iframeRef.current?.contentWindow?.postMessage({ type: 'TEBIKI_CHART_PICK_CANCEL' }, '*')
                   cancelPick()
                 }} className="underline">キャンセル</button>
               </div>

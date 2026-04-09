@@ -90,8 +90,8 @@ export default function BlockPalette() {
 
   useEffect(() => {
     const handler = () => firstItemRef.current?.focus()
-    document.addEventListener('govguide:focus-palette', handler)
-    return () => document.removeEventListener('govguide:focus-palette', handler)
+    document.addEventListener('tebiki-chart:focus-palette', handler)
+    return () => document.removeEventListener('tebiki-chart:focus-palette', handler)
   }, [])
 
   return (

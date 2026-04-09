@@ -45,7 +45,7 @@ export class ScenarioEngine {
     }
     this.currentStep++
     updateProgressBar(this.currentStep, this.totalSteps)
-    window.parent.postMessage({ type: 'TETSUZUKI_QUEST_BLOCK_ACTIVE', blockId: block.id }, '*')
+    window.parent.postMessage({ type: 'TEBIKI_CHART_BLOCK_ACTIVE', blockId: block.id }, '*')
     this.render(block)
   }
 
@@ -100,7 +100,7 @@ export class ScenarioEngine {
     removeOverlay()
     removeInputOverlay()
     removeDocumentPreview()
-    window.parent.postMessage({ type: 'TETSUZUKI_QUEST_BLOCK_ACTIVE', blockId: null }, '*')
+    window.parent.postMessage({ type: 'TEBIKI_CHART_BLOCK_ACTIVE', blockId: null }, '*')
   }
 
   finish(message?: string): void {
@@ -132,7 +132,7 @@ export class ScenarioEngine {
     document.getElementById('tq-completion-close')!.onclick = () => toast.remove()
     setTimeout(() => toast.remove(), 5000)
 
-    window.parent.postMessage({ type: 'TETSUZUKI_QUEST_FINISHED' }, '*')
+    window.parent.postMessage({ type: 'TEBIKI_CHART_FINISHED' }, '*')
   }
 
   destroy(): void {

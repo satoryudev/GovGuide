@@ -52,7 +52,7 @@ export default function WelcomeModal({ onStart, onSkip }: Props) {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-10 text-center">
           <div className="text-6xl mb-3">👋</div>
           <h1 id="welcome-title" className="text-xl font-bold text-white">
-            GovGuide チームへようこそ
+            Tebiki Chart チームへようこそ
           </h1>
           <p className="text-blue-200 text-sm mt-1">
             シナリオ作成担当者として登録されました
