@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 
 export const ONBOARDING_KEYS = {
-  HAS_VISITED: 'govguide_has_visited',
-  TOUR_COMPLETED: 'govguide_tour_completed',
+  HAS_VISITED: 'tebiki-chart_has_visited',
+  TOUR_COMPLETED: 'tebiki-chart_tour_completed',
 } as const;
 
 interface OnboardingState {

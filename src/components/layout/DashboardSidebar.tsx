@@ -7,7 +7,7 @@ const NAV_ITEMS = [
 ]
 
 function openOnboarding() {
-  document.dispatchEvent(new CustomEvent('govguide:open-onboarding'))
+  document.dispatchEvent(new CustomEvent('tebiki-chart:open-onboarding'))
 }
 
 export default function DashboardSidebar() {
@@ -17,7 +17,7 @@ export default function DashboardSidebar() {
       <div className="px-5 py-5 border-b border-slate-700/50">
         <div className="flex items-center gap-2">
           <span className="text-xl">🗺️</span>
-          <span className="text-lg font-bold text-white">GovGuide</span>
+          <span className="text-lg font-bold text-white">Tebiki Chart</span>
         </div>
         <p className="text-xs text-slate-400 mt-0.5 pl-8">行政手続きナビゲーター</p>
       </div>

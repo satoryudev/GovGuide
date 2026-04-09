@@ -4,7 +4,7 @@ export default defineConfig({
   entry: { embed: 'embed/index.ts' },
   outDir: 'public',
   format: ['iife'],
-  globalName: 'TetsuzukiQuest',
+  globalName: 'TebikiChart',
   minify: true,
   clean: false,
   outExtension: () => ({ js: '.js' }),

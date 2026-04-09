@@ -22,8 +22,8 @@ export default function HomePage() {
 
   useEffect(() => {
     const handler = () => setWelcomeOpen(true)
-    document.addEventListener('govguide:open-onboarding', handler)
-    return () => document.removeEventListener('govguide:open-onboarding', handler)
+    document.addEventListener('tebiki-chart:open-onboarding', handler)
+    return () => document.removeEventListener('tebiki-chart:open-onboarding', handler)
   }, [])
 
   const openWizard = () => setWizardOpen(true)

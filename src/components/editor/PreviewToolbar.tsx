@@ -7,8 +7,8 @@ import { saveScenario } from '@/lib/scenarioStorage'
 import { Scenario } from '@/types/scenario'
 
 // 重複注入を検知するためのマーカー
-const MARKER_START = '<!-- GovGuide Tutorial Start -->'
-const MARKER_END = '<!-- GovGuide Tutorial End -->'
+const MARKER_START = '<!-- TebikiChart Tutorial Start -->'
+const MARKER_END = '<!-- TebikiChart Tutorial End -->'
 
 async function fetchEmbedJs(): Promise<string> {
   const res = await fetch('/embed.js')
@@ -22,7 +22,7 @@ function buildEmbedBlock(embedJs: string, scenarioJson: string): string {
     embedJs,
     '<\/script>',
     '<script>',
-    `TetsuzukiQuest.startWithPrompt(${scenarioJson});`,
+    `TebikiChart.startWithPrompt(${scenarioJson});`,
     '<\/script>',
     MARKER_END,
   ].join('\n')

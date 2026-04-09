@@ -137,14 +137,14 @@ export function loadScenarios(): Scenario[] {
     }
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) {
-      console.error('[GovGuide] Invalid scenario storage format')
+      console.error('[TebikiChart] Invalid scenario storage format')
       return [DEMO_SCENARIO]
     }
 
     // Issue #4: 不正なシナリオをフィルタリング
     const valid = parsed.filter((s) => {
       if (!isValidScenario(s)) {
-        console.warn('[GovGuide] Skipping invalid scenario:', s)
+        console.warn('[TebikiChart] Skipping invalid scenario:', s)
         return false
       }
       return true

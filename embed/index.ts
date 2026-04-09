@@ -204,7 +204,7 @@ function startPickMode(): void {
     const selector = getCssSelector(el)
     const id = (el as HTMLElement).id ?? ''
 
-    window.parent.postMessage({ type: 'TETSUZUKI_QUEST_ELEMENT_PICKED', selector, id }, '*')
+    window.parent.postMessage({ type: 'TEBIKI_CHART_ELEMENT_PICKED', selector, id }, '*')
     stopPickMode()
   }
 
@@ -228,15 +228,15 @@ function stopPickMode(): void {
   if (pickCleanup) pickCleanup()
 }
 
-const TetsuzukiQuest = {
+const TebikiChart = {
   async start(jsonPath: string): Promise<void> {
     try {
       const res = await fetch(jsonPath)
       if (!res.ok) throw new Error(`Failed to fetch scenario: ${res.status}`)
       const scenario: Scenario = await res.json()
-      TetsuzukiQuest.startWithScenario(scenario)
+      TebikiChart.startWithScenario(scenario)
     } catch (err) {
-      console.error('[TetsuzukiQuest] Failed to load scenario:', err)
+      console.error('[TebikiChart] Failed to load scenario:', err)
       // Issue #10: ユーザーにエラーを通知
       showErrorDialog('シナリオの読み込みに失敗しました。')
     }
@@ -262,20 +262,20 @@ const TetsuzukiQuest = {
 // エディタのプレビューiframe内では同一オリジンからのメッセージのみ受け入れる
 window.addEventListener('message', (event) => {
   if (event.origin !== window.location.origin) {
-    console.warn('[TetsuzukiQuest] Untrusted origin:', event.origin)
+    console.warn('[TebikiChart] Untrusted origin:', event.origin)
     return
   }
 
-  if (event.data?.type === 'TETSUZUKI_QUEST_START') {
-    TetsuzukiQuest.startWithScenario(event.data.scenario as Scenario)
+  if (event.data?.type === 'TEBIKI_CHART_START') {
+    TebikiChart.startWithScenario(event.data.scenario as Scenario)
   }
-  if (event.data?.type === 'TETSUZUKI_QUEST_STOP') {
-    TetsuzukiQuest.stop()
+  if (event.data?.type === 'TEBIKI_CHART_STOP') {
+    TebikiChart.stop()
   }
-  if (event.data?.type === 'TETSUZUKI_QUEST_PICK_START') {
+  if (event.data?.type === 'TEBIKI_CHART_PICK_START') {
     startPickMode()
   }
-  if (event.data?.type === 'TETSUZUKI_QUEST_PICK_CANCEL') {
+  if (event.data?.type === 'TEBIKI_CHART_PICK_CANCEL') {
     stopPickMode()
   }
 })
@@ -293,5 +293,5 @@ function startWithPrompt(scenario: Scenario): void {
   }
 }
 
-export const { start, startWithScenario, stop } = TetsuzukiQuest
+export const { start, startWithScenario, stop } = TebikiChart
 export { startWithPrompt }
