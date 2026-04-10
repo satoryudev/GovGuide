@@ -5,8 +5,8 @@ const MOBILE_UA_PATTERN = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mi
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // /sp は除外（無限リダイレクト防止）
-  if (pathname.startsWith('/sp')) {
+  // /sp および静的ファイルは除外（無限リダイレクト防止・HTMLファイル直アクセス許可）
+  if (pathname.startsWith('/sp') || pathname.endsWith('.html') || pathname.endsWith('.js') || pathname.endsWith('.json')) {
     return NextResponse.next()
   }
 
