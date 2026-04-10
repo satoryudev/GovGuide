@@ -127,9 +127,16 @@ export default function EditorPage() {
   const [localFileName, setLocalFileName] = useState<string | null>(null)
   const { tourCompleted, completeTour } = useOnboarding()
   const [tourActive, setTourActive] = useState(false)
+  const [tourPhase, setTourPhase] = useState<string>('drag')
+  const isEarlyTourPhaseRef = useRef(false)
+  // マウント時の editorOpenKey を記録し、新規シナリオ遷移直後の誤開きを防ぐ
+  const mountEditorOpenKeyRef = useRef(editorOpenKey)
 
   const [widths, setWidths] = useState<PanelWidths>({ palette: 220, canvas: 340, preview: 420, blockEditor: 260 })
   const [collapsed, setCollapsed] = useState<Collapsed>({ palette: false, preview: false, blockEditor: true })
+
+  // step1-3（drag/reorder/menu）中はブロック設定を開かない
+  isEarlyTourPhaseRef.current = tourActive && ['drag', 'reorder'].includes(tourPhase)
 
   // mousedown 時に一度だけ記録する startWidth refs
   const paletteStartRef = useRef(widths.palette)
@@ -216,13 +223,17 @@ export default function EditorPage() {
 
   useEffect(() => {
     if (tourCompleted) return
-    const t = setTimeout(() => setTourActive(true), 500)
+    const t = setTimeout(() => setTourActive(true), 100)
     return () => clearTimeout(t)
   }, [tourCompleted])
 
   // ⋮ ボタンでブロックが選択されたらブロック設定パネルを展開する
   useEffect(() => {
     if (!selectedBlockId) return
+    // step1-3 ではブロック設定を開かない
+    if (isEarlyTourPhaseRef.current) return
+    // 新規シナリオ遷移直後（マウント時の初期値と同じ）は開かない
+    if (editorOpenKey === mountEditorOpenKeyRef.current) return
     // ブロック設定が閉じていた場合のみ開く前のプレビュー幅を保存
     if (collapsed.blockEditor && !collapsed.preview) {
       previewWidthBeforeBlockEditorRef.current = previewWRef.current
@@ -240,6 +251,8 @@ export default function EditorPage() {
   useEffect(() => {
     if (collapsed.blockEditor) return
     const handleClick = (e: MouseEvent) => {
+      // チュートリアル中はブロック設定パネルを誤って閉じないようにする
+      if (tourActive) return
       if ((e.target as HTMLElement).closest('[title="ブロック設定を開く"]')) return
       // ブロックアイテムをクリックした場合はパネルを閉じない（別ブロックへの切り替えを優先）
       if ((e.target as HTMLElement).closest('[data-block-id]')) return
@@ -251,7 +264,7 @@ export default function EditorPage() {
     }
     document.addEventListener('click', handleClick)
     return () => document.removeEventListener('click', handleClick)
-  }, [collapsed.blockEditor, closeBlockEditor])
+  }, [collapsed.blockEditor, closeBlockEditor, tourActive])
 
   useEffect(() => {
     if (!pickRequest) return
@@ -354,8 +367,8 @@ export default function EditorPage() {
       {validationIssues.length > 0 && (
         <ValidationDialog
           issues={validationIssues}
-          onClose={() => setValidationIssues([])}
-          onJumpToBlock={(blockId) => setSelectedBlockId(blockId)}
+          onClose={tourActive ? () => {} : () => setValidationIssues([])}
+          onJumpToBlock={(blockId) => { setSelectedBlockId(blockId); setValidationIssues([]) }}
         />
       )}
       {/* Top header — breadcrumb style */}
@@ -442,11 +455,15 @@ export default function EditorPage() {
 
           {/* ── ブロック設定 ── */}
           {!collapsed.blockEditor && (
-            <div ref={blockEditorPanelRef} className="flex flex-col overflow-hidden flex-shrink-0" style={{ width: blockEditorW }}>
+            <div ref={blockEditorPanelRef} className="flex flex-col overflow-hidden flex-shrink-0 relative" style={{ width: blockEditorW }}>
               <PanelHeader title="ブロック設定" collapsed={false} onToggle={closeBlockEditor} />
               <div className="flex-1 overflow-y-auto">
                 <BlockEditor />
               </div>
+              {/* step4(menu phase)中はブロック設定を操作不可にする（tour tooltip z-index:44 より低く設定） */}
+              {tourActive && tourPhase === 'menu' && (
+                <div className="absolute inset-0 cursor-not-allowed" style={{ zIndex: 43 }} />
+              )}
             </div>
           )}
 
@@ -506,6 +523,7 @@ export default function EditorPage() {
           setTourActive(false)
           completeTour()
         }}
+        onPhaseChange={setTourPhase}
       />
     </div>
   )
